@@ -25,8 +25,7 @@ WATERMARK_MAPPING_NAMES={
 
 # Dictionary mapping pipeline types to supported watermarking algorithms
 PIPELINE_SUPPORTED_WATERMARKS = {
-    PIPELINE_TYPE_IMAGE: ["TR", "GS", "PRC", "RI", "SEAL", "ROBIN", "WIND","SFW"],
-    PIPELINE_TYPE_IMAGE: ["TR", "GS", "PRC", "RI", "SEAL", "ROBIN", "WIND", "GM"],
+    PIPELINE_TYPE_IMAGE: ["TR", "GS", "PRC", "RI", "SEAL", "ROBIN", "WIND", "GM", "SFW"],
     PIPELINE_TYPE_TEXT_TO_VIDEO: ["VideoShield", "VideoMark"],
     PIPELINE_TYPE_IMAGE_TO_VIDEO: ["VideoShield", "VideoMark"]
 }

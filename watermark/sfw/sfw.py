@@ -19,7 +19,7 @@ class SFWConfig(BaseConfig):
         """Initialize algorithm-specific parameters."""
         self.w_seed = self.config_dict['w_seed']
         self.delta=self.config_dict['delta']
-        self.wm_type=self.config_dict['wm_type']
+        self.wm_type=self.config_dict['wm_type'] # "HSTR" or "HSQR"
         self.threshold = self.config_dict['threshold']
         self.w_channel = self.config_dict['w_channel']
         
