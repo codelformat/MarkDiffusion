@@ -40,7 +40,7 @@ import dotenv
 dotenv.load_dotenv()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_path = "/data2/shared_model/fuzheyu/stable-diffusion-2-1-base/"
+model_path = os.getenv("MODEL_PATH")
 """
     DirectImageQualityAnalysisPipeline: PSNRAnalyzer, SSIMAnalyzer,BRISQUEAnalyzer
     ReferencedImageQualityAnalysisPipeline: CLIPScoreCalculator
