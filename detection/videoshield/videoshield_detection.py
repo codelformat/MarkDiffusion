@@ -90,36 +90,85 @@ class VideoShieldDetector(BaseDetector):
     
     def _video_diffusion_inverse(self, watermark_r: torch.Tensor) -> torch.Tensor:
         """Video-specific diffusion inverse with frame dimension handling."""
-        # Get tensor dimensions
         batch, channels, frames, height, width = watermark_r.shape
-        
+
+        expected_frames = getattr(self, "num_frames", 0)
+        frames_to_use = frames
+
+        if expected_frames:
+            if frames != expected_frames:
+                logger.warning(
+                    "Frame count mismatch detected: received %s frames, expected %s frames.",
+                    frames,
+                    expected_frames,
+                )
+                frames_to_use = min(frames, expected_frames)
+                logger.info("Truncated to the first %d frames for detection.", frames_to_use)
+
+        if frames_to_use != frames:
+            watermark_r = watermark_r[:, :, :frames_to_use, :, :]
+            frames = frames_to_use
+
+        if frames < self.k_f:
+            logger.error(
+                "VideoShield detector cannot process %s frames with repetition factor %s.",
+                frames,
+                self.k_f,
+            )
+            return torch.zeros_like(self.watermark)
+
+        remainder = frames % self.k_f
+        if remainder:
+            aligned_frames = frames - remainder
+            if aligned_frames <= 0:
+                logger.error(
+                    "Unable to align frame count (%s) with repetition factor %s.",
+                    frames,
+                    self.k_f,
+                )
+                return torch.zeros_like(self.watermark)
+            logger.info(
+                "Aligning detection frames to %s frames to satisfy repetition factor %s.",
+                self.k_f,
+                aligned_frames,
+            )
+            watermark_r = watermark_r[:, :, :aligned_frames, :, :]
+            frames = aligned_frames
+
         ch_stride = channels // self.k_c
         frame_stride = frames // self.k_f
         h_stride = height // self.k_h
         w_stride = width // self.k_w
-        
+
+        if not all([ch_stride, frame_stride, h_stride, w_stride]):
+            logger.error(
+                "Invalid strides detected (c:%s, f:%s, h:%s, w:%s).", 
+                ch_stride,
+                frame_stride,
+                h_stride,
+                w_stride,
+            )
+            return torch.zeros_like(self.watermark)
+
         ch_list = [ch_stride] * self.k_c
         frame_list = [frame_stride] * self.k_f
         h_list = [h_stride] * self.k_h
         w_list = [w_stride] * self.k_w
-        
-        # Split and reorganize dimensions for voting
+
         try:
             split_dim1 = torch.cat(torch.split(watermark_r, tuple(ch_list), dim=1), dim=0)
             split_dim2 = torch.cat(torch.split(split_dim1, tuple(frame_list), dim=2), dim=0)
             split_dim3 = torch.cat(torch.split(split_dim2, tuple(h_list), dim=3), dim=0)
             split_dim4 = torch.cat(torch.split(split_dim3, tuple(w_list), dim=4), dim=0)
-            
-            # Voting
+
             vote = torch.sum(split_dim4, dim=0).clone()
             vote[vote <= self.vote_threshold] = 0
             vote[vote > self.vote_threshold] = 1
-            
+
             return vote
         except Exception as e:
             logger.error(f"Video diffusion inverse failed: {e}")
-            # Return a fallback result
-            return torch.zeros_like(self.gt_patch)
+            return torch.zeros_like(self.watermark)
     
     def _image_diffusion_inverse(self, watermark_r: torch.Tensor) -> torch.Tensor:
         """Image-specific diffusion inverse."""
@@ -150,7 +199,7 @@ class VideoShieldDetector(BaseDetector):
         except Exception as e:
             logger.error(f"Image diffusion inverse failed: {e}")
             # Return a fallback result
-            return torch.zeros_like(self.gt_patch)
+            return torch.zeros_like(self.watermark)
         
     def eval_watermark(self,
                        reversed_latents: torch.Tensor,
