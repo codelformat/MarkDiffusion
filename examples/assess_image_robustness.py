@@ -17,7 +17,7 @@ import torch
 from watermark.auto_watermark import AutoWatermark
 from evaluation.dataset import StableDiffusionPromptsDataset
 from evaluation.pipelines.detection import WatermarkMediaDetectionPipeline, UnWatermarkMediaDetectionPipeline, DetectionPipelineReturnType
-from evaluation.tools.image_editor import JPEGCompression, Rotation, CrSc, GaussianBlurring, GaussianNoise, Brightness
+from evaluation.tools.image_editor import JPEGCompression, Rotation, CrSc, GaussianBlurring, GaussianNoise, Brightness, Mask, Overlay, AdaptiveNoiseInjection
 from evaluation.tools.success_rate_calculator import DynamicThresholdSuccessRateCalculator
 from utils.diffusion_config import DiffusionConfig
 from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
@@ -29,7 +29,7 @@ dotenv.load_dotenv()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model_path = os.getenv("MODEL_PATH")
 
-def assess_robustness(algorithm_name, attack_name):
+def assess_image_robustness(algorithm_name, attack_name):
     my_dataset = StableDiffusionPromptsDataset(max_samples=200)
     scheduler = DPMSolverMultistepScheduler.from_pretrained(model_path, subfolder="scheduler")
     pipe = StableDiffusionPipeline.from_pretrained(model_path, scheduler=scheduler).to(device)
@@ -59,11 +59,17 @@ def assess_robustness(algorithm_name, attack_name):
         attack = GaussianNoise(sigma=0.1)
     elif attack_name == 'Brightness':
         attack = Brightness(factor=0.6)
+    elif attack_name == 'Mask':
+        attack = Mask(mask_ratio=0.1, num_masks=5)
+    elif attack_name == 'Overlay':
+        attack = Overlay(num_strokes=10, stroke_width=5, stroke_type='random')
+    elif attack_name == 'AdaptiveNoise':
+        attack = AdaptiveNoiseInjection(intensity=0.5, auto_select=True)
 
-    pipline1 = WatermarkedMediaDetectionPipeline(dataset=my_dataset, media_editor_list=[attack],
+    pipline1 = WatermarkMediaDetectionPipeline(dataset=my_dataset, media_editor_list=[attack],
                                                 show_progress=True, return_type=DetectionPipelineReturnType.SCORES) 
 
-    pipline2 = UnWatermarkedMediaDetectionPipeline(dataset=my_dataset, media_editor_list=[],
+    pipline2 = UnWatermarkMediaDetectionPipeline(dataset=my_dataset, media_editor_list=[],
                                                 show_progress=True, return_type=DetectionPipelineReturnType.SCORES)
 
     calculator = DynamicThresholdSuccessRateCalculator(labels=['TPR', 'F1'], rule='best')
