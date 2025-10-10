@@ -32,6 +32,8 @@
 As the MarkDiffusion repository content becomes increasingly rich and its size grows larger, we have created a model storage repository on Hugging Face called [Generative-Watermark-Toolkits](https://huggingface.co/Generative-Watermark-Toolkits) to facilitate usage. This repository contains various default models for watermarking algorithms that involve self-trained models. We have removed the model weights from the corresponding `ckpts/` folders of these watermarking algorithms in the main repository. **When using the code, please first download the corresponding models from the Hugging Face repository according to the config paths and save them to the `ckpts/` directory before running the code.**
 
 ## 🔥 Updates
+🎯 **(2025.10.10)** Add *Mask, Overlay, AdaptiveNoiseInjection* image attack tools, thanks Zheyu Fu for his PR!
+
 🎯 **(2025.10.09)** Add *VideoCodecAttack, FrameRateAdapter, FrameInterpolationAttack* video attack tools, thanks Luyang Si for his PR!
 
 🎯 **(2025.10.08)** Add *SSIM, BRISQUE, VIF, FSIM* image quality analyzer, thanks Huan Wang for her PR!
@@ -105,6 +107,9 @@ MarkDiffusion supports eight pipelines, two for detection (WatermarkedMediaDetec
 | GaussianBlurring | Robustness (Image) | Gaussian blur attack, evaluating watermark resistance to blur processing | Blurred images/frames |
 | JPEGCompression | Robustness (Image) | JPEG compression attack, testing watermark robustness to lossy compression | Compressed images/frames |
 | Brightness | Robustness (Image) | Brightness adjustment attack, evaluating watermark resistance to brightness changes | Brightness-modified images/frames |
+| Mask | Robustness (Image) | Image masking attack, testing watermark resistance to partial occlusion by random black rectangles | Masked images/frames |
+| Overlay | Robustness (Image) | Image overlay attack, testing watermark resistance to graffiti-style strokes and annotations | Overlaid images/frames |
+| AdaptiveNoiseInjection | Robustness (Image) | Adaptive noise injection attack, testing watermark resistance to content-aware noise (Gaussian/Salt-pepper/Poisson/Speckle) | Noisy images/frames with adaptive noise |
 | **Video Attack Tools** | | | |
 | MPEG4Compression | Robustness (Video) | MPEG-4 video compression attack, testing video watermark compression robustness | Compressed video frames |
 | FrameAverage | Robustness (Video) | Frame averaging attack, destroying watermarks through inter-frame averaging | Averaged video frames |
