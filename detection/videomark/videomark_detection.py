@@ -22,6 +22,9 @@ from ldpc import bp_decoder
 from galois import FieldArray
 import sys        
 from Levenshtein import hamming
+import logging
+
+logger = logging.getLogger(__name__)
 
 class VideoMarkDetector(BaseDetector):
     
@@ -43,6 +46,7 @@ class VideoMarkDetector(BaseDetector):
         self.decoding_key = decoding_key
         self.GF = GF
         self.threshold = threshold
+        self.code_length = self.decoding_key[0].shape[0]
 
     def _recover_posteriors(self, z, basis=None, variances=None):
         if variances is None:
@@ -58,9 +62,33 @@ class VideoMarkDetector(BaseDetector):
         else:
             return erf((z @ basis) / denominators)
         
+    def _align_posteriors_length(self, posteriors: torch.Tensor) -> torch.Tensor:
+        """Ensure posterior vector length matches the code length expected by LDPC decoder."""
+        current_len = posteriors.numel()
+        if current_len == self.code_length:
+            return posteriors
+        if current_len > self.code_length:
+            logger.warning(
+                "Detected per-frame feature length %s is greater than the encoding length %s. The excess part has been truncated.",
+                current_len,
+                self.code_length,
+            )
+            return posteriors[:self.code_length]
+
+        pad_len = self.code_length - current_len
+        logger.warning(
+            "Detected per-frame feature length %s is less than the encoding length %s. %s elements have been padded with zeros at the end.",
+            current_len,
+            self.code_length,
+            pad_len,
+        )
+        pad = torch.zeros(pad_len, dtype=posteriors.dtype, device=posteriors.device)
+        return torch.cat([posteriors, pad], dim=0)
+
     def _detect_watermark(self, posteriors: torch.Tensor) -> Tuple[bool, float]:
         """Detect watermark in posteriors."""
         generator_matrix, parity_check_matrix, one_time_pad, false_positive_rate, noise_rate, test_bits, g, max_bp_iter, t = self.decoding_key
+        posteriors = self._align_posteriors_length(posteriors)
         posteriors = (1 - 2 * noise_rate) * (1 - 2 * np.array(one_time_pad, dtype=float)) * posteriors.numpy(force=True)
         
         r = parity_check_matrix.shape[0]
@@ -106,6 +134,7 @@ class VideoMarkDetector(BaseDetector):
         if max_bp_iter is None:
             max_bp_iter = max_bp_iter_key
 
+        posteriors = self._align_posteriors_length(posteriors)
         posteriors = (1 - 2 * noise_rate) * (1 - 2 * np.array(one_time_pad, dtype=float)) * posteriors.numpy(force=True)
         channel_probs = (1 - np.abs(posteriors)) / 2
         x_recovered = (1 - np.sign(posteriors)) // 2
@@ -184,33 +213,85 @@ class VideoMarkDetector(BaseDetector):
         """Evaluate watermark in reversed latents."""
         if detector_type != 'bit_acc':
             raise ValueError(f'Detector type {detector_type} is not supported for VideoMark. Use "bit_acc" instead.')
+
+        if reversed_latents.dim() < 3:
+            raise ValueError("VideoMark detector expects at least 3D reversed latents for video inputs.")
+
+        latents = reversed_latents
+
+        if latents.dim() == 4:
+            latents = latents.unsqueeze(0)
+
+        if latents.dim() != 5:
+            raise ValueError("Unsupported reversed_latents dimensionality for VideoMark detector.")
+
+        expected_frames = self.num_frames or 0
+
+        channel_axis = None
+        for axis in range(1, 5):
+            if latents.shape[axis] == 4:
+                channel_axis = axis
+                break
+        if channel_axis is not None and channel_axis != 1:
+            latents = latents.movedim(channel_axis, 1)
+
+        candidate_axes = [axis for axis in range(2, 5)]
+        if expected_frames:
+            frame_axis = min(candidate_axes, key=lambda axis: abs(latents.shape[axis] - expected_frames))
+        else:
+            frame_axis = 2
+        if frame_axis != 2:
+            latents = latents.movedim(frame_axis, 2)
+
+        available_frames = latents.shape[2]
+        frames_to_use = available_frames
+
+        if expected_frames:
+            if available_frames != expected_frames:
+                logger.warning(
+                    "Frame count mismatch detected: received %s frames, expected %s frames.",
+                    available_frames,
+                    expected_frames,
+                )
+                frames_to_use = min(available_frames, expected_frames)
+                logger.info("Truncated to the first %d frames for detection.", frames_to_use)
+
+        if frames_to_use <= 1:
+            logger.error("There is no enough frame for VideoMark detection.")
+            return {
+                'is_watermarked': False,
+                "bit_acc": 0.0,
+                "recovered_index": np.array([]),
+                "recovered_message": np.array([]),
+                "recovered_distance": np.array([]),
+            }
+
+        latents = latents[:, :, :frames_to_use, ...]
+
         idx_list, message_list, distance_list = [], [], []
         message_length = self.message_sequence.shape[1]
         message_sequence_str = [self.bits_to_string(msg) for msg in self.message_sequence]
 
-        for frame_index in range(1, self.num_frames):
-
+        for frame_index in range(1, frames_to_use):
+            frame_latents = latents[:, :, frame_index, ...].to(torch.float64)
             reversed_prc = self._recover_posteriors(
-                reversed_latents[:, :, frame_index].to(torch.float64).flatten().cpu(),
+                frame_latents.flatten().cpu(),
                 variances=self.var
             ).flatten().cpu()
-            self.recovered_prc = reversed_prc
+            aligned_prc = self._align_posteriors_length(reversed_prc)
+            self.recovered_prc = aligned_prc
 
-            # Decode & Detect 
-            """if not self._detect_watermark(reversed_prc):
-                decode_message = np.full((1, message_length), -1)
-                decode_message_str = "<message_placeholder>"
+            detect_result = self._detect_watermark(aligned_prc)
+            decode_message = self._decode_message(aligned_prc)
+            if decode_message is None:
+                decode_message = np.zeros((message_length,), dtype=int)
+                decode_message_str = "0" * message_length
             else:
-                decode_message = self._decode_message(reversed_prc)
+                decode_message = np.asarray(decode_message).astype(int)
                 decode_message_str = self.bits_to_string(decode_message)
-            """
-            detect_result = self._detect_watermark(reversed_prc)
-            decode_message = self._decode_message(reversed_prc)
-            decode_message_str = self.bits_to_string(decode_message)
 
-            # Normalized Hamming Distance
             distances = np.array([
-                2 * (hamming(decode_message_str, msg) / len(msg) - 0.5 )
+                2 * (hamming(decode_message_str, msg) / len(msg) - 0.5)
                 for msg in message_sequence_str
             ])
             min_distance = distances.min()
@@ -220,14 +301,26 @@ class VideoMarkDetector(BaseDetector):
             distance_list.append(min_distance)
             idx_list.append(idx)
 
-        # Temporal Message Matching (TMM)
         recovered_index, recovered_message, recovered_distance = self.recover(
             idx_list, message_list, distance_list, message_length
         )
-        bit_acc = np.mean(recovered_message == self.watermark[1:])
+
+        watermark_reference = np.asarray(self.watermark[1:frames_to_use])
+        recovered_message = np.asarray(recovered_message)
+
+        if recovered_message.size == 0 or watermark_reference.size == 0:
+            bit_acc = 0.0
+        else:
+            frame_limit = min(recovered_message.shape[0], watermark_reference.shape[0])
+            if frame_limit <= 0:
+                bit_acc = 0.0
+            else:
+                bit_acc = np.mean(
+                    recovered_message[:frame_limit] == watermark_reference[:frame_limit]
+                )
 
         return {
-            'is_watermarked' : float(bit_acc) >= self.threshold,
+            'is_watermarked': float(bit_acc) >= self.threshold,
             "bit_acc": float(bit_acc),
             "recovered_index": recovered_index,
             "recovered_message": recovered_message,
