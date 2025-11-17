@@ -36,15 +36,15 @@
 ## 🔥 更新日志
 🎯 **(2025.10.10)** 添加 *Mask、Overlay、AdaptiveNoiseInjection* 图像攻击工具，感谢付哲语的 PR！
 
-🎯 **(2025.10.09)** 添加 *VideoCodecAttack、FrameRateAdapter、FrameInterpolationAttack* 视频攻击工具，感谢司璐阳的 PR！
+🎯 **(2025.10.09)** 添加 *VideoCodecAttack、FrameRateAdapter、FrameInterpolationAttack* 视频攻击工具，感谢司路阳的 PR！
 
 🎯 **(2025.10.08)** 添加 *SSIM、BRISQUE、VIF、FSIM* 图像质量分析器，感谢王欢的 PR！
 
 ✨ **(2025.10.07)** 添加 [SFW](https://arxiv.org/pdf/2509.07647) 水印方法，感谢王欢的 PR！
 
-✨ **(2025.10.07)** 添加 [VideoMark](https://arxiv.org/abs/2504.16359) 水印方法，感谢李瀚谦的 PR！
+✨ **(2025.10.07)** 添加 [VideoMark](https://arxiv.org/abs/2504.16359) 水印方法，感谢李翰乾的 PR！
 
-✨ **(2025.9.29)** 添加 [GaussMarker](https://arxiv.org/abs/2506.11444) 水印方法，感谢司璐阳的 PR！
+✨ **(2025.9.29)** 添加 [GaussMarker](https://arxiv.org/abs/2506.11444) 水印方法，感谢司路阳的 PR！
 
 ## MarkDiffusion 简介
 
