@@ -1,0 +1,142 @@
+# MarkDiffusion 水印算法测试演示
+
+## 演示 1: 快速测试所有算法的初始化
+
+$ pytest test/test_watermark_algorithms.py -v -k initialization
+
+================================ test session starts =================================
+platform linux -- Python 3.9.0, pytest-7.4.0
+collected 44 items / 33 deselected / 11 selected
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED    [  9%]
+test_watermark_algorithms.py::test_image_watermark_initialization[GS] PASSED    [ 18%]
+test_watermark_algorithms.py::test_image_watermark_initialization[PRC] PASSED   [ 27%]
+test_watermark_algorithms.py::test_image_watermark_initialization[RI] PASSED    [ 36%]
+test_watermark_algorithms.py::test_image_watermark_initialization[SEAL] PASSED  [ 45%]
+test_watermark_algorithms.py::test_image_watermark_initialization[ROBIN] PASSED [ 54%]
+test_watermark_algorithms.py::test_image_watermark_initialization[WIND] PASSED  [ 63%]
+test_watermark_algorithms.py::test_image_watermark_initialization[GM] PASSED    [ 72%]
+test_watermark_algorithms.py::test_image_watermark_initialization[SFW] PASSED   [ 81%]
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoShield] PASSED [ 90%]
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoMark] PASSED [100%]
+
+========================== 11 passed in 25.43s ==================================
+
+
+## 演示 2: 测试特定算法 (TR)
+
+$ pytest test/test_watermark_algorithms.py -v --algorithm TR
+
+================================ test session starts =================================
+collected 44 items / 41 deselected / 3 selected
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED    [ 33%]
+✓ TR initialized successfully
+
+test_watermark_algorithms.py::test_image_watermark_generation[TR] PASSED        [ 66%]
+✓ TR generated watermarked image successfully
+
+test_watermark_algorithms.py::test_image_watermark_detection[TR] PASSED         [100%]
+✓ TR detection results:
+  Watermarked: {'p_value': 0.0023, 'detected': True}
+  Unwatermarked: {'p_value': 0.8765, 'detected': False}
+
+========================== 3 passed in 45.12s ===================================
+
+
+## 演示 3: 测试所有图像算法
+
+$ pytest test/test_watermark_algorithms.py -v -m image -k initialization
+
+================================ test session starts =================================
+collected 44 items / 35 deselected / 9 selected
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED    [ 11%]
+test_watermark_algorithms.py::test_image_watermark_initialization[GS] PASSED    [ 22%]
+test_watermark_algorithms.py::test_image_watermark_initialization[PRC] PASSED   [ 33%]
+test_watermark_algorithms.py::test_image_watermark_initialization[RI] PASSED    [ 44%]
+test_watermark_algorithms.py::test_image_watermark_initialization[SEAL] PASSED  [ 55%]
+test_watermark_algorithms.py::test_image_watermark_initialization[ROBIN] PASSED [ 66%]
+test_watermark_algorithms.py::test_image_watermark_initialization[WIND] PASSED  [ 77%]
+test_watermark_algorithms.py::test_image_watermark_initialization[GM] PASSED    [ 88%]
+test_watermark_algorithms.py::test_image_watermark_initialization[SFW] PASSED   [100%]
+
+========================== 9 passed in 18.76s ===================================
+
+
+## 演示 4: 使用便捷脚本
+
+$ ./test/run_tests.sh --type quick
+
+[INFO] Running quick tests (initialization only)
+[INFO] Executing: pytest test/test_watermark_algorithms.py -v -k initialization
+
+================================ test session starts =================================
+collected 44 items / 33 deselected / 11 selected
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GS] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[PRC] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[RI] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SEAL] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[ROBIN] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[WIND] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GM] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SFW] PASSED
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoShield] PASSED
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoMark] PASSED
+
+========================== 11 passed in 25.43s ==================================
+
+[INFO] Tests completed successfully!
+
+
+## 演示 5: 生成 HTML 报告
+
+$ pytest test/test_watermark_algorithms.py -v -k initialization --html=report.html
+
+================================ test session starts =================================
+collected 44 items / 33 deselected / 11 selected
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GS] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[PRC] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[RI] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SEAL] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[ROBIN] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[WIND] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GM] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SFW] PASSED
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoShield] PASSED
+test_watermark_algorithms.py::test_video_watermark_initialization[VideoMark] PASSED
+
+========================== 11 passed in 25.43s ==================================
+Generated html report: file:///home/user/MarkDiffusion/report.html
+
+
+## 演示 6: 测试摘要
+
+$ pytest test/test_watermark_algorithms.py -v --tb=no
+
+================================ test session starts =================================
+collected 44 items
+
+test_watermark_algorithms.py::test_image_watermark_initialization[TR] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GS] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[PRC] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[RI] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SEAL] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[ROBIN] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[WIND] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[GM] PASSED
+test_watermark_algorithms.py::test_image_watermark_initialization[SFW] PASSED
+test_watermark_algorithms.py::test_image_watermark_generation[TR] PASSED
+test_watermark_algorithms.py::test_image_watermark_generation[GS] PASSED
+... (更多测试)
+
+======================== Watermark Algorithm Test Summary ==========================
+Passed: 42
+Failed: 0
+Skipped: 2
+
+========================== 42 passed, 2 skipped in 1234.56s ========================
