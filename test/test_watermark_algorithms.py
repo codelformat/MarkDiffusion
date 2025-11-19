@@ -22,12 +22,13 @@ from typing import Dict, Any
 
 from watermark.auto_watermark import AutoWatermark, PIPELINE_SUPPORTED_WATERMARKS
 from utils.pipeline_utils import (
+    get_pipeline_type,
     PIPELINE_TYPE_IMAGE,
     PIPELINE_TYPE_TEXT_TO_VIDEO,
 )
 
 # Import test constants from conftest
-from conftest import (
+from .conftest import (
     TEST_PROMPT_IMAGE,
     TEST_PROMPT_VIDEO,
     IMAGE_SIZE,
@@ -51,7 +52,7 @@ def test_image_watermark_initialization(algorithm_name, image_diffusion_config):
         )
         assert watermark is not None
         assert watermark.config is not None
-        assert watermark.pipeline_type == PIPELINE_TYPE_IMAGE
+        assert get_pipeline_type(watermark.config.pipe) == PIPELINE_TYPE_IMAGE
         print(f"✓ {algorithm_name} initialized successfully")
     except Exception as e:
         pytest.fail(f"Failed to initialize {algorithm_name}: {e}")
@@ -140,11 +141,13 @@ def test_image_watermark_detection(algorithm_name, image_diffusion_config, skip_
         detection_result_wm = watermark.detect_watermark_in_media(watermarked_image)
         assert detection_result_wm is not None
         assert isinstance(detection_result_wm, dict)
+        assert detection_result_wm['is_watermarked'] is True
 
         # Detect watermark in unwatermarked image
         detection_result_unwm = watermark.detect_watermark_in_media(unwatermarked_image)
         assert detection_result_unwm is not None
         assert isinstance(detection_result_unwm, dict)
+        assert detection_result_unwm['is_watermarked'] is False
 
         print(f"✓ {algorithm_name} detection results:")
         print(f"  Watermarked: {detection_result_wm}")
@@ -172,7 +175,7 @@ def test_video_watermark_initialization(algorithm_name, video_diffusion_config):
         )
         assert watermark is not None
         assert watermark.config is not None
-        assert watermark.pipeline_type == PIPELINE_TYPE_TEXT_TO_VIDEO
+        assert get_pipeline_type(watermark.config.pipe) == PIPELINE_TYPE_TEXT_TO_VIDEO
         print(f"✓ {algorithm_name} initialized successfully")
     except Exception as e:
         pytest.fail(f"Failed to initialize {algorithm_name}: {e}")
@@ -279,6 +282,7 @@ def test_video_watermark_detection(algorithm_name, video_diffusion_config, skip_
         )
         assert detection_result_wm is not None
         assert isinstance(detection_result_wm, dict)
+        assert detection_result_wm['is_watermarked'] is True
 
         # Detect watermark in unwatermarked video
         detection_result_unwm = watermark.detect_watermark_in_media(
@@ -288,6 +292,7 @@ def test_video_watermark_detection(algorithm_name, video_diffusion_config, skip_
         )
         assert detection_result_unwm is not None
         assert isinstance(detection_result_unwm, dict)
+        assert detection_result_unwm['is_watermarked'] is False
 
         print(f"✓ {algorithm_name} detection results:")
         print(f"  Watermarked: {detection_result_wm}")
