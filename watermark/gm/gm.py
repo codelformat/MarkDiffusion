@@ -385,7 +385,17 @@ class GMUtils:
 			if relative_candidate.is_file():
 				checkpoint_path = relative_candidate
 			else:
-				raise FileNotFoundError(f"GNR checkpoint not found at '{checkpoint}'")
+				from huggingface_hub import snapshot_download
+				import os
+				snapshot_download(
+					repo_id="Generative-Watermark-Toolkits/MarkDiffusion-gm",
+					local_dir=checkpoint.split("/")[0],
+					repo_type="model",
+					local_dir_use_symlinks=False,
+					endpoint=os.getenv("HF_ENDPOINT", "https://huggingface.co"),
+				)
+				checkpoint_path = relative_candidate
+				# raise FileNotFoundError(f"GNR checkpoint not found at '{checkpoint}'")
 		in_channels = self.config.latent_channels * (2 if self.config.gnr_classifier_type == 1 else 1)
 		return GNRRestorer(
 			checkpoint_path=checkpoint_path,
@@ -410,8 +420,17 @@ class GMUtils:
 		candidates.append(base_dir / checkpoint)
 		candidates.append(base_dir.parent.parent / checkpoint)
 		for candidate in candidates:
-			if candidate.is_file():
-				return joblib.load(candidate)
+			if not candidate.is_file():
+				from huggingface_hub import snapshot_download
+				import os
+				snapshot_download(
+					repo_id="Generative-Watermark-Toolkits/MarkDiffusion-gm",
+					local_dir=checkpoint.split("/")[0],
+					repo_type="model",
+					local_dir_use_symlinks=False,
+					endpoint=os.getenv("HF_ENDPOINT", "https://huggingface.co"),
+				)
+			return joblib.load(candidate)
 		raise FileNotFoundError(f"Fuser checkpoint not found at '{checkpoint}'")
 
 	# ------------------------------------------------------------------
