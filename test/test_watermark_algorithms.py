@@ -353,8 +353,19 @@ def test_inversion_4d_image_input(inversion_type, device, image_pipeline):
 
     latents_input = torch.randn(batch_size, channels, height, width).to(device)
 
-    # Create text embeddings
-    text_embeddings = torch.randn(1, 77, 768).to(device)  # Standard CLIP embedding size
+    # Get correct text embedding dimension from the model
+    # Different SD versions use different text encoders (CLIP: 768, OpenCLIP: 1024)
+    text_encoder = pipe.text_encoder
+    with torch.no_grad():
+        # Use a dummy prompt to get properly formatted embeddings
+        text_inputs = pipe.tokenizer(
+            "a test prompt",
+            padding="max_length",
+            max_length=pipe.tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_embeddings = text_encoder(text_inputs.input_ids.to(device))[0]
 
     try:
         # Test forward diffusion (image to noise)
@@ -377,6 +388,7 @@ def test_inversion_4d_image_input(inversion_type, device, image_pipeline):
         print(f"✓ {inversion_type} inversion for 4D image input successful")
         print(f"  Input shape: {latents_input.shape}")
         print(f"  Output Z_T shape: {z_t.shape}")
+        print(f"  Text embeddings shape: {text_embeddings.shape}")
         print(f"  Number of intermediate steps: {len(intermediate_latents)}")
 
     except Exception as e:
@@ -410,8 +422,18 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
     # Flatten the frame dimension into batch dimension
     latents_flat = latents_input.reshape(batch_size * num_frames, channels, height, width)
 
-    # Create text embeddings
-    text_embeddings = torch.randn(1, 77, 768).to(device)
+    # Get correct text embeddings from the model
+    text_encoder = pipe.text_encoder
+    with torch.no_grad():
+        text_inputs = pipe.tokenizer(
+            "a test video prompt",
+            padding="max_length",
+            max_length=pipe.tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_embeddings = text_encoder(text_inputs.input_ids.to(device))[0]
+
     # Expand for all frames
     text_embeddings_expanded = text_embeddings.repeat(num_frames, 1, 1)
 
@@ -440,6 +462,7 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
         print(f"✓ {inversion_type} inversion for 5D video input successful")
         print(f"  Input shape: {latents_input.shape}")
         print(f"  Output Z_T shape: {z_t.shape}")
+        print(f"  Text embeddings shape: {text_embeddings_expanded.shape}")
         print(f"  Number of intermediate steps: {len(intermediate_latents)}")
 
     except Exception as e:
@@ -457,7 +480,18 @@ def test_inversion_reconstruction_accuracy(device, image_pipeline):
 
     # Create test input
     latents_input = torch.randn(1, 4, 64, 64).to(device)
-    text_embeddings = torch.randn(1, 77, 768).to(device)
+
+    # Get correct text embeddings from the model
+    text_encoder = pipe.text_encoder
+    with torch.no_grad():
+        text_inputs = pipe.tokenizer(
+            "a test prompt for reconstruction",
+            padding="max_length",
+            max_length=pipe.tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_embeddings = text_encoder(text_inputs.input_ids.to(device))[0]
 
     try:
         # Forward diffusion: x_0 -> x_T
@@ -488,6 +522,7 @@ def test_inversion_reconstruction_accuracy(device, image_pipeline):
         print(f"  MSE between original and reconstructed: {mse.item():.6f}")
         print(f"  Original shape: {latents_input.shape}")
         print(f"  Reconstructed shape: {reconstructed.shape}")
+        print(f"  Text embeddings shape: {text_embeddings.shape}")
 
         # The reconstruction should be reasonably close
         # Note: DDIM is not perfectly reversible, so we expect some error
