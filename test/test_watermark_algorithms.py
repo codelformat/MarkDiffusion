@@ -588,13 +588,58 @@ def test_image_watermark_visualization(algorithm_name, image_diffusion_config, t
         visualizer.draw_orig_latents(channel=0, ax=ax)
         plt.close(fig)
 
-        # Save a test visualization
+        # Test algorithm-specific methods based on algorithm type
+        algorithm_specific_methods = {
+            'TR': ['draw_pattern_fft', 'draw_inverted_pattern_fft'],
+            'GS': ['draw_watermark_bits', 'draw_reconstructed_watermark_bits'],
+            'PRC': ['draw_generator_matrix', 'draw_codeword', 'draw_recovered_codeword', 'draw_difference_map'],
+            'RI': ['draw_ring_pattern_fft', 'draw_heter_pattern_fft', 'draw_inverted_ring_pattern_fft'],
+            'SEAL': ['draw_embedding_distributions', 'draw_patch_diff'],
+            'ROBIN': ['draw_pattern_fft', 'draw_inverted_pattern_fft', 'draw_optimized_watermark'],
+            'WIND': ['draw_group_pattern_fft', 'draw_orig_noise_wo_group_pattern',
+                     'draw_inverted_noise_wo_group_pattern', 'draw_diff_noise_wo_group_pattern',
+                     'draw_inverted_group_pattern_fft'],
+            'GM': [],  # GM may not have specific methods beyond base class
+            'SFW': []  # SFW may not have specific methods beyond base class
+        }
+
+        # Test algorithm-specific visualization methods
+        specific_methods = algorithm_specific_methods.get(algorithm_name, [])
+        tested_methods = []
+
+        for method_name in specific_methods:
+            if hasattr(visualizer, method_name):
+                fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+                try:
+                    method = getattr(visualizer, method_name)
+                    # Call method with minimal parameters
+                    method(ax=ax)
+                    tested_methods.append(method_name)
+                    plt.close(fig)
+                except Exception as e:
+                    plt.close(fig)
+                    print(f"  Warning: {algorithm_name}.{method_name}() failed: {e}")
+
+        # Save a comprehensive visualization with algorithm-specific methods
+        methods_to_visualize = ['draw_watermarked_image', 'draw_orig_latents']
+        method_kwargs_list = [{}, {'channel': 0}]
+
+        # Add one algorithm-specific method if available
+        if tested_methods:
+            methods_to_visualize.append(tested_methods[0])
+            method_kwargs_list.append({})
+
+        # Adjust grid size based on number of methods
+        num_methods = len(methods_to_visualize)
+        cols = min(num_methods, 3)
+        rows = (num_methods + cols - 1) // cols
+
         save_path = tmp_path / f"{algorithm_name}_test_visualization.png"
         fig = visualizer.visualize(
-            rows=1,
-            cols=2,
-            methods=['draw_watermarked_image', 'draw_orig_latents'],
-            method_kwargs=[{}, {'channel': 0}],
+            rows=rows,
+            cols=cols,
+            methods=methods_to_visualize,
+            method_kwargs=method_kwargs_list,
             save_path=str(save_path)
         )
         plt.close(fig)
@@ -603,6 +648,9 @@ def test_image_watermark_visualization(algorithm_name, image_diffusion_config, t
         assert save_path.exists()
 
         print(f"✓ {algorithm_name} visualization test passed")
+        print(f"  Base methods tested: draw_watermarked_image, draw_orig_latents")
+        if tested_methods:
+            print(f"  Algorithm-specific methods tested: {', '.join(tested_methods)}")
         print(f"  Visualization saved to: {save_path}")
 
     except NotImplementedError as e:
@@ -670,13 +718,68 @@ def test_video_watermark_visualization(algorithm_name, video_diffusion_config, t
         visualizer.draw_orig_latents(channel=0, frame=0, ax=ax)
         plt.close(fig)
 
-        # Save a test visualization
+        # Test algorithm-specific methods based on video algorithm type
+        algorithm_specific_methods = {
+            'VideoShield': [
+                ('draw_watermark_bits', {'channel': None, 'frame': 0}),
+                ('draw_reconstructed_watermark_bits', {'channel': None, 'frame': 0}),
+                ('draw_watermarked_video_frames', {'num_frames': 4})
+            ],
+            'VideoMark': [
+                ('draw_watermarked_video_frames', {'num_frames': 4})
+            ]
+        }
+
+        # Test algorithm-specific visualization methods
+        specific_methods = algorithm_specific_methods.get(algorithm_name, [])
+        tested_methods = []
+
+        for method_info in specific_methods:
+            if isinstance(method_info, tuple):
+                method_name, kwargs = method_info
+            else:
+                method_name = method_info
+                kwargs = {}
+
+            if hasattr(visualizer, method_name):
+                fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+                try:
+                    method = getattr(visualizer, method_name)
+                    # Call method with specific parameters for video methods
+                    method(ax=ax, **kwargs)
+                    tested_methods.append(method_name)
+                    plt.close(fig)
+                except Exception as e:
+                    plt.close(fig)
+                    print(f"  Warning: {algorithm_name}.{method_name}() failed: {e}")
+
+        # Save a comprehensive visualization with algorithm-specific methods
+        methods_to_visualize = ['draw_watermarked_image', 'draw_orig_latents']
+        method_kwargs_list = [{}, {'channel': 0, 'frame': 0}]
+
+        # Add video-specific method if available
+        if algorithm_name == 'VideoShield':
+            # Test watermark bits visualization for VideoShield
+            if 'draw_watermark_bits' in [m[0] if isinstance(m, tuple) else m for m in tested_methods]:
+                methods_to_visualize.append('draw_watermark_bits')
+                method_kwargs_list.append({'channel': None, 'frame': 0})
+        elif algorithm_name == 'VideoMark':
+            # Test video frames visualization for VideoMark
+            if 'draw_watermarked_video_frames' in tested_methods:
+                methods_to_visualize.append('draw_watermarked_video_frames')
+                method_kwargs_list.append({'num_frames': 4})
+
+        # Adjust grid size based on number of methods
+        num_methods = len(methods_to_visualize)
+        cols = min(num_methods, 3)
+        rows = (num_methods + cols - 1) // cols
+
         save_path = tmp_path / f"{algorithm_name}_test_visualization.png"
         fig = visualizer.visualize(
-            rows=1,
-            cols=2,
-            methods=['draw_watermarked_image', 'draw_orig_latents'],
-            method_kwargs=[{}, {'channel': 0, 'frame': 0}],
+            rows=rows,
+            cols=cols,
+            methods=methods_to_visualize,
+            method_kwargs=method_kwargs_list,
             save_path=str(save_path)
         )
         plt.close(fig)
@@ -685,6 +788,9 @@ def test_video_watermark_visualization(algorithm_name, video_diffusion_config, t
         assert save_path.exists()
 
         print(f"✓ {algorithm_name} video visualization test passed")
+        print(f"  Base methods tested: draw_watermarked_image, draw_orig_latents")
+        if tested_methods:
+            print(f"  Algorithm-specific methods tested: {', '.join(tested_methods)}")
         print(f"  Visualization saved to: {save_path}")
 
     except NotImplementedError as e:

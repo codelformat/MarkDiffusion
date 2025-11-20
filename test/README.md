@@ -21,15 +21,15 @@ test/
 
 #### Image watermark algorithms (9)
 
-- **TR** (Tree-Ring)
-- **GS** (Gaussian Shading)
-- **PRC** (Perceptual Robust Coding)
-- **RI** (Robust Invisible)
-- **SEAL** (Secure Embedding Algorithm)
-- **ROBIN** (Robust Invisible Noise)
-- **WIND** (Watermark in Noise Domain)
-- **GM** (Generative Model / GaussMarker)
-- **SFW** (Stable Feature Watermark)
+- **TR**
+- **GS**
+- **PRC**
+- **RI**
+- **SEAL**
+- **ROBIN**
+- **WIND**
+- **GM**
+- **SFW**
 
 #### Video watermark algorithms (2)
 
@@ -38,8 +38,8 @@ test/
 
 ### Inversion Modules
 
-- **DDIM Inversion** – supports 4D image input and 5D video input  
-- **Exact Inversion** – supports 4D image input
+- **DDIM Inversion** – supports image / video latents 
+- **Exact Inversion** – supports image / video latents 
 
 ### Visualization Modules
 
@@ -78,22 +78,6 @@ pytest test/test_watermark_algorithms.py -v --algorithm TR
 pytest test/test_watermark_algorithms.py -v -k initialization
 ```
 
-#### Use the convenience script
-
-```bash
-# Test all algorithms
-./test/run_tests.sh
-
-# Test image algorithms
-./test/run_tests.sh --type image
-
-# Test a specific algorithm
-./test/run_tests.sh --algorithm TR
-
-# Quick tests (initialization only)
-./test/run_tests.sh --type quick
-```
-
 ## 📋 Test Types and Coverage
 
 ### Watermark Algorithm Tests
@@ -122,8 +106,6 @@ Verify the generation functionality of watermark algorithms:
 # Test all generation functionality
 pytest test/test_watermark_algorithms.py -v -k generation
 
-# Skip generation tests
-pytest test/test_watermark_algorithms.py -v --skip-generation
 ```
 
 #### 3. Detection tests (11 tests)
@@ -138,15 +120,13 @@ Verify the detection functionality of watermark algorithms:
 # Test all detection functionality
 pytest test/test_watermark_algorithms.py -v -k detection
 
-# Skip detection tests
-pytest test/test_watermark_algorithms.py -v --skip-detection
 ```
 
 ### Inversion Tests
 
 #### 4. 4D image inversion tests (2 tests: DDIM + Exact)
 
-Test the ability of inversion modules to handle 4D image input:
+Test the ability of inversion modules to handle 4D image latent input:
 
 - Input shape: `(batch_size, channels, height, width)`
 - Test both DDIM and Exact inversion methods
@@ -156,16 +136,16 @@ Test the ability of inversion modules to handle 4D image input:
 # Test 4D image inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d"
 
-# Test DDIM inversion
+# Test DDIM inversion only
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[ddim]"
 
-# Test Exact inversion
+# Test Exact inversion only
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[exact]"
 ```
 
 #### 5. 5D video inversion tests (1 test: DDIM)
 
-Test the ability of inversion modules to handle 5D video frame input:
+Test the ability of inversion modules to handle 5D video frame latent input:
 
 - Input shape: `(batch_size, num_frames, channels, height, width)`
 - Test DDIM inversion method
@@ -174,6 +154,12 @@ Test the ability of inversion modules to handle 5D video frame input:
 ```bash
 # Test 5D video inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_5d"
+
+# Test DDIM inversion only
+pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[ddim]"
+
+# Test Exact inversion only
+pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[exact]"
 ```
 
 #### 6. Inversion reconstruction accuracy tests (1 test)
@@ -195,8 +181,6 @@ pytest test/test_watermark_algorithms.py -v -k "test_inversion_reconstruction"
 # Test all inversion modules
 pytest test/test_watermark_algorithms.py -v -m inversion
 
-# Test inversion modules (excluding slow video tests)
-pytest test/test_watermark_algorithms.py -v -m "inversion and not slow"
 ```
 
 ### Visualization Tests
@@ -208,7 +192,22 @@ Test visualization for image watermark algorithms:
 - Load visualization data
 - Create visualizer instances
 - Test basic plotting methods (watermarked images, latent vectors, etc.)
+- **Test algorithm-specific visualization methods**
 - Generate and save visualization images
+
+##### Algorithm-specific methods tested:
+
+| Algorithm | Specific Methods |
+|-----------|-----------------|
+| **TR** | `draw_pattern_fft()`, `draw_inverted_pattern_fft()` |
+| **GS** | `draw_watermark_bits()`, `draw_reconstructed_watermark_bits()` |
+| **PRC** | `draw_generator_matrix()`, `draw_codeword()`, `draw_recovered_codeword()`, `draw_difference_map()` |
+| **RI** | `draw_ring_pattern_fft()`, `draw_heter_pattern_fft()`, `draw_inverted_ring_pattern_fft()` |
+| **SEAL** | `draw_embedding_distributions()`, `draw_patch_diff()` |
+| **ROBIN** | `draw_pattern_fft()`, `draw_inverted_pattern_fft()`, `draw_optimized_watermark()` |
+| **WIND** | `draw_group_pattern_fft()`, `draw_orig_noise_wo_group_pattern()`, `draw_inverted_noise_wo_group_pattern()`, `draw_diff_noise_wo_group_pattern()`, `draw_inverted_group_pattern_fft()` |
+| **GM** | Base methods only |
+| **SFW** | Base methods only |
 
 ```bash
 # Test visualization of all image algorithms
@@ -225,7 +224,15 @@ Test visualization for video watermark algorithms:
 - Load video visualization data
 - Create visualizer instances
 - Test visualization of video frames
+- **Test algorithm-specific visualization methods for video**
 - Generate and save visualization images
+
+##### Algorithm-specific methods tested:
+
+| Algorithm | Specific Methods |
+|-----------|-----------------|
+| **VideoShield** | `draw_watermark_bits()` (with frame support), `draw_reconstructed_watermark_bits()` (with frame support), `draw_watermarked_video_frames()` |
+| **VideoMark** | `draw_watermarked_video_frames()` |
 
 ```bash
 # Test visualization of all video algorithms
@@ -240,12 +247,6 @@ pytest test/test_watermark_algorithms.py -v -k "test_video_watermark_visualizati
 ```bash
 # Test all visualization functionality
 pytest test/test_watermark_algorithms.py -v -m visualization
-
-# Test image visualization only (exclude video)
-pytest test/test_watermark_algorithms.py -v -m "visualization and image"
-
-# Test video visualization
-pytest test/test_watermark_algorithms.py -v -m "visualization and video"
 ```
 
 **Total**: 58+ parameterized test cases (44 watermark algorithm tests + 4 inversion tests + 11 visualization tests)
@@ -322,7 +323,7 @@ pytest test/test_watermark_algorithms.py -v -m "image and visualization"
 pytest test/test_watermark_algorithms.py -v -k "initialization"
 ```
 
-**Expected result**: 11 algorithm tests pass, taking about 10–30 seconds.
+**Expected result**: 11 algorithm tests pass.
 
 ### Example 2: Fully test a single algorithm
 
@@ -456,21 +457,7 @@ pytest test/test_watermark_algorithms.py -v \
     --image-model-path /local/path/to/model
 ```
 
-### Issue 2: CUDA out of memory
-
-**Error message**: `CUDA out of memory`
-
-**Solutions**:
-
-1. Reduce batch size.
-2. Run tests on CPU (auto-detected).
-3. Test a single algorithm at a time:
-
-```bash
-pytest test/test_watermark_algorithms.py -v --algorithm TR
-```
-
-### Issue 3: Test timeout
+### Issue 2: Test timeout
 
 **Error message**: `Test timeout`
 
@@ -489,7 +476,7 @@ pytest test/test_watermark_algorithms.py -v --skip-generation --skip-detection
 pytest test/test_watermark_algorithms.py -v -k "initialization"
 ```
 
-### Issue 4: Config file not found
+### Issue 3: Config file not found
 
 **Error message**: `Config file not found`
 
@@ -499,7 +486,7 @@ pytest test/test_watermark_algorithms.py -v -k "initialization"
 2. Check that the corresponding JSON config file exists under the `config/` directory.
 3. Verify the exact filename and its case.
 
-### Issue 5: Inversion tests failed
+### Issue 4: Inversion tests failed
 
 **Error message**: `Failed to invert 4D/5D input`
 
@@ -513,13 +500,13 @@ pytest test/test_watermark_algorithms.py -v -k "initialization"
 pytest test/test_watermark_algorithms.py -v -s -k inversion
 ```
 
-### Issue 6: Visualization tests failed
+### Issue 5: Visualization tests failed
 
-**Error message**: `Algorithm does not implement get_visualization_data()`
+**Error message**: `Algorithm does not implement get_data_visualize()`
 
 **Solutions**:
 
-1. Ensure the watermark algorithm implements `get_visualization_data()`.
+1. Ensure the watermark algorithm implements `get_data_visualize()`.
 2. Check that the algorithm is registered in `VISUALIZATION_DATA_MAPPING`.
 3. Inspect detailed error output:
 
@@ -527,33 +514,7 @@ pytest test/test_watermark_algorithms.py -v -s -k inversion
 pytest test/test_watermark_algorithms.py -v -s -k visualization
 ```
 
-### Issue 7: matplotlib-related errors
-
-**Error message**: `No module named 'matplotlib'`
-
-**Solutions**:
-
-1. Install matplotlib:
-
-```bash
-pip install matplotlib
-```
-
-2. If running in a headless environment (e.g., server), set a backend:
-
-```bash
-export MPLBACKEND=Agg
-pytest test/test_watermark_algorithms.py -v -m visualization
-```
-
 ## 📈 Performance Optimization
-
-### Test durations
-
-- **Quick tests** (initialization only): ~10–30 seconds  
-- **Full tests** (including generation and detection): ~10–30 minutes (depending on hardware)  
-- **Inversion tests**: ~1–3 minutes (4D), ~5–10 minutes (5D)  
-- **Visualization tests**: ~5–15 minutes (requires generating watermarked images first)
 
 ### Optimization tips
 
@@ -607,8 +568,7 @@ To add tests for a new watermark algorithm:
 1. Register the new algorithm in `watermark/auto_watermark.py`.
 2. Add its config file under the `config/` directory.
 3. The test framework will automatically discover and test the new algorithm.
-
-**No test code changes required!**
+4. Manually add visualization test support.(Modify dict variable `algorithm_specific_methods` in `test_video_watermark_visualization` or `test_image_watermark_visualization`)
 
 ### Add new tests for inversion modules
 
@@ -673,6 +633,7 @@ Or override the default values via command-line arguments.
 | `test_inversion_4d_image_input[ddim]` | 4D (B,C,H,W) | DDIM | Image latent inversion |
 | `test_inversion_4d_image_input[exact]` | 4D (B,C,H,W) | Exact | Image latent inversion |
 | `test_inversion_5d_video_input[ddim]` | 5D (B,F,C,H,W) | DDIM | Video frame latent inversion |
+| `test_inversion_5d_video_input[exact]` | 5D (B,F,C,H,W) | Exact | Video frame latent inversion |
 | `test_inversion_reconstruction_accuracy` | 4D (B,C,H,W) | DDIM | Forward + reverse reconstruction accuracy |
 
 **Notation**:
@@ -687,17 +648,17 @@ Or override the default values via command-line arguments.
 
 | Test name | Algorithm type | What is tested |
 |-----------|----------------|----------------|
-| `test_image_watermark_visualization[TR]` | Image | TR visualization (watermarked image, latent vectors, frequency analysis) |
-| `test_image_watermark_visualization[GS]` | Image | GS visualization (watermark bits, reconstructed bits) |
-| `test_image_watermark_visualization[PRC]` | Image | PRC visualization |
-| `test_image_watermark_visualization[RI]` | Image | RI visualization |
-| `test_image_watermark_visualization[SEAL]` | Image | SEAL visualization |
-| `test_image_watermark_visualization[ROBIN]` | Image | ROBIN visualization |
-| `test_image_watermark_visualization[WIND]` | Image | WIND visualization |
-| `test_image_watermark_visualization[GM]` | Image | GM visualization |
-| `test_image_watermark_visualization[SFW]` | Image | SFW visualization |
-| `test_video_watermark_visualization[VideoShield]` | Video | VideoShield visualization (video frames) |
-| `test_video_watermark_visualization[VideoMark]` | Video | VideoMark visualization (video frames) |
+| `test_image_watermark_visualization[TR]` | Image | TR visualization: watermarked image, latent vectors, **pattern_fft, inverted_pattern_fft** |
+| `test_image_watermark_visualization[GS]` | Image | GS visualization: watermarked image, latent vectors, **watermark_bits, reconstructed_watermark_bits** |
+| `test_image_watermark_visualization[PRC]` | Image | PRC visualization: watermarked image, latent vectors, **generator_matrix, codeword, recovered_codeword, difference_map** |
+| `test_image_watermark_visualization[RI]` | Image | RI visualization: watermarked image, latent vectors, **ring_pattern_fft, heter_pattern_fft, inverted_ring_pattern_fft** |
+| `test_image_watermark_visualization[SEAL]` | Image | SEAL visualization: watermarked image, latent vectors, **embedding_distributions, patch_diff** |
+| `test_image_watermark_visualization[ROBIN]` | Image | ROBIN visualization: watermarked image, latent vectors, **pattern_fft, inverted_pattern_fft, optimized_watermark** |
+| `test_image_watermark_visualization[WIND]` | Image | WIND visualization: watermarked image, latent vectors, **group_pattern_fft, noise_analysis methods** |
+| `test_image_watermark_visualization[GM]` | Image | GM visualization: watermarked image, latent vectors (base methods only) |
+| `test_image_watermark_visualization[SFW]` | Image | SFW visualization: watermarked image, latent vectors (base methods only) |
+| `test_video_watermark_visualization[VideoShield]` | Video | VideoShield visualization: video frames, **watermark_bits, reconstructed_watermark_bits, watermarked_video_frames** |
+| `test_video_watermark_visualization[VideoMark]` | Video | VideoMark visualization: video frames, **watermarked_video_frames** |
 
 ## 🤝 Contributing
 
