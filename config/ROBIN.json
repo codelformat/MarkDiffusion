@@ -21,5 +21,6 @@
     "train_seed": 42,
     "optimized_guidance_scale": 3.5,
     "data_guidance_scale": 7.5,
-    "train_guidance_scale": 3.5
-} 
+    "train_guidance_scale": 3.5,
+    "hf_dir": "model_from_hf"
+}

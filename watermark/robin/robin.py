@@ -9,6 +9,7 @@ from utils.diffusion_config import DiffusionConfig
 import copy
 import numpy as np
 from PIL import Image
+from huggingface_hub import hf_hub_download
 from visualize.data_for_visualization import DataForVisualization
 from evaluation.dataset import StableDiffusionPromptsDataset
 from utils.media_utils import get_random_latents
@@ -47,7 +48,7 @@ class ROBINConfig(BaseConfig):
         self.optimized_guidance_scale = self.config_dict['optimized_guidance_scale'] # guidance scale for optimized prompt signal
         self.data_guidance_scale = self.config_dict['data_guidance_scale'] # guidance scale for data prompt signal
         self.train_guidance_scale = self.config_dict['train_guidance_scale'] # guidance scale for training prompt signal
-        
+        self.hf_dir = self.config_dict['hf_dir']
         # self.output_img_dir = 'watermark/robin/generated_images'
         self.output_img_dir = "watermark/robin/generated_images"
         self.ckpt_dir = 'watermark/robin/ckpts'
@@ -151,7 +152,7 @@ class ROBINUtils:
         
         # Build hyperparameters
         hyperparameters = self.build_hyperparameters()
-        checkpoint_path = os.path.join(self.config.ckpt_dir, f"optimized_wm5-30_embedding-step-{hyperparameters['max_train_steps']}.pt")
+        checkpoint_path=hf_hub_download(repo_id="Generative-Watermark-Toolkits/MarkDiffusion-robin", filename=f"optimized_wm5-30_embedding-step-{hyperparameters['max_train_steps']}.pt", cache_dir=self.config.hf_dir)
 
         if os.path.exists(checkpoint_path):
             print(f"Loading checkpoint from {checkpoint_path}")

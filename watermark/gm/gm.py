@@ -14,6 +14,7 @@ from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 from scipy.special import betainc
 from scipy.stats import norm, truncnorm
+from huggingface_hub import hf_hub_download
 
 from ..base import BaseConfig, BaseWatermark
 from utils.media_utils import get_random_latents, get_media_latents, transform_to_model_format
@@ -380,12 +381,15 @@ class GMUtils:
 		if not checkpoint:
 			return None
 		checkpoint_path = Path(checkpoint)
-		if not checkpoint_path.is_file():
-			relative_candidate = Path(__file__).resolve().parent / checkpoint
-			if relative_candidate.is_file():
-				checkpoint_path = relative_candidate
-			else:
-				raise FileNotFoundError(f"GNR checkpoint not found at '{checkpoint}'")
+		repo = getattr(self.config, "huggingface_repo", None)
+		hf_dir=getattr(self.config, "hf_dir", None)
+		if repo:
+			try:
+				hf_path = hf_hub_download(repo_id=repo, filename=Path(checkpoint).name,cache_dir=hf_dir)
+				print(f"Downloaded GNR checkpoint from Huggingface Hub: {hf_path}")
+				checkpoint_path = Path(hf_path)
+			except Exception as e:
+				raise FileNotFoundError(f"GNR checkpoint not found on ({repo}). error: {e}")
 		in_channels = self.config.latent_channels * (2 if self.config.gnr_classifier_type == 1 else 1)
 		return GNRRestorer(
 			checkpoint_path=checkpoint_path,
@@ -405,7 +409,14 @@ class GMUtils:
 			raise ImportError(
 				"joblib is required to load the GaussMarker fuser. Install joblib or disable the fuser."
 			)
-		candidates = [Path(checkpoint)]
+		repo = getattr(self.config, "huggingface_repo", None)
+		hf_dir=getattr(self.config, "hf_dir", None)
+		if repo:
+			try:
+				hf_path = hf_hub_download(repo_id=repo, filename=Path(checkpoint).name,cache_dir=hf_dir)
+				candidates = [Path(hf_path)]
+			except Exception as e:
+				raise FileNotFoundError(f"Fuser checkpoint not found on ({repo}). error: {e}")
 		base_dir = Path(__file__).resolve().parent
 		candidates.append(base_dir / checkpoint)
 		candidates.append(base_dir.parent.parent / checkpoint)
@@ -591,9 +602,11 @@ class GMConfig(BaseConfig):
 		self.gnr_binary_threshold = cfg.get("gnr_binary_threshold", 0.5)
 		self.gnr_use_for_decision = cfg.get("gnr_use_for_decision", True)
 		self.gnr_threshold = cfg.get("gnr_threshold")
+		self.huggingface_repo = cfg.get("huggingface_repo")
 		self.fuser_checkpoint = cfg.get("fuser_checkpoint")
 		self.fuser_threshold = cfg.get("fuser_threshold")
 		self.fuser_frequency_scale = cfg.get("fuser_frequency_scale", 0.01)
+		self.hf_dir = cfg.get("hf_dir")
 
 		self.latent_channels = self.pipe.unet.config.in_channels
 		self.latent_height = self.image_size[0] // self.pipe.vae_scale_factor
