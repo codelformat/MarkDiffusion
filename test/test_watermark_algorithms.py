@@ -397,16 +397,19 @@ def test_inversion_4d_image_input(inversion_type, device, image_pipeline):
 
 @pytest.mark.inversion
 @pytest.mark.slow
-@pytest.mark.parametrize("inversion_type", ["ddim"])
+@pytest.mark.parametrize("inversion_type", ["ddim", "exact"])
 def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
     """Test inversion modules with 5D video input (batch_size, num_frames, channels, height, width)."""
     import torch
-    from inversions import DDIMInversion
+    from inversions import DDIMInversion, ExactInversion
 
     pipe, scheduler = video_pipeline
 
     # Create inversion instance
-    inversion = DDIMInversion(scheduler=scheduler, unet=pipe.unet, device=device)
+    if inversion_type == "ddim":
+        inversion = DDIMInversion(scheduler=scheduler, unet=pipe.unet, device=device)
+    else:  # exact
+        inversion = ExactInversion(scheduler=scheduler, unet=pipe.unet, device=device)
 
     # Create 5D test input: (batch_size, num_frames, channels, height, width)
     batch_size = 1
@@ -417,10 +420,6 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
 
     # Reshape to 5D for video: (batch_size, num_frames, channels, height, width)
     latents_input = torch.randn(batch_size, num_frames, channels, height, width).to(device)
-
-    # For video, we need to process frame by frame
-    # Flatten the frame dimension into batch dimension
-    latents_flat = latents_input.reshape(batch_size * num_frames, channels, height, width)
 
     # Get correct text embeddings from the model
     text_encoder = pipe.text_encoder
@@ -434,14 +433,11 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
         )
         text_embeddings = text_encoder(text_inputs.input_ids.to(device))[0]
 
-    # Expand for all frames
-    text_embeddings_expanded = text_embeddings.repeat(num_frames, 1, 1)
-
     try:
         # Test forward diffusion (video frames to noise)
         intermediate_latents = inversion.forward_diffusion(
-            text_embeddings=text_embeddings_expanded,
-            latents=latents_flat,
+            text_embeddings=text_embeddings,
+            latents=latents_input.to(pipe.dtype),
             num_inference_steps=10,  # Use fewer steps for testing
             guidance_scale=1.0
         )
@@ -452,17 +448,13 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
         assert len(intermediate_latents) > 0
 
         # Get final inverted latent (Z_T)
-        z_t_flat = intermediate_latents[-1]
-        assert z_t_flat.shape == latents_flat.shape
-
-        # Reshape back to 5D
-        z_t = z_t_flat.reshape(batch_size, num_frames, channels, height, width)
+        z_t = intermediate_latents[-1]
         assert z_t.shape == latents_input.shape
 
         print(f"✓ {inversion_type} inversion for 5D video input successful")
         print(f"  Input shape: {latents_input.shape}")
         print(f"  Output Z_T shape: {z_t.shape}")
-        print(f"  Text embeddings shape: {text_embeddings_expanded.shape}")
+        print(f"  Text embeddings shape: {text_embeddings.shape}")
         print(f"  Number of intermediate steps: {len(intermediate_latents)}")
 
     except Exception as e:
@@ -470,13 +462,17 @@ def test_inversion_5d_video_input(inversion_type, device, video_pipeline):
 
 
 @pytest.mark.inversion
-def test_inversion_reconstruction_accuracy(device, image_pipeline):
+@pytest.mark.parametrize("inversion_type", ["ddim", "exact"])
+def test_inversion_reconstruction_accuracy(device, image_pipeline, inversion_type):
     """Test that inversion can accurately reconstruct the latent vector."""
     import torch
-    from inversions import DDIMInversion
+    from inversions import DDIMInversion, ExactInversion
 
     pipe, scheduler = image_pipeline
-    inversion = DDIMInversion(scheduler=scheduler, unet=pipe.unet, device=device)
+    if inversion_type == "ddim":
+        inversion = DDIMInversion(scheduler=scheduler, unet=pipe.unet, device=device)
+    else:  # exact
+        inversion = ExactInversion(scheduler=scheduler, unet=pipe.unet, device=device)
 
     # Create test input
     latents_input = torch.randn(1, 4, 64, 64).to(device)
