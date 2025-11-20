@@ -88,6 +88,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "image: mark test as image watermark test")
     config.addinivalue_line("markers", "video: mark test as video watermark test")
     config.addinivalue_line("markers", "inversion: mark test as inversion module test")
+    config.addinivalue_line("markers", "visualization: mark test as visualization test")
     config.addinivalue_line("markers", "slow: mark test as slow running")
 
 

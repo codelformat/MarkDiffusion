@@ -526,3 +526,168 @@ def test_inversion_reconstruction_accuracy(device, image_pipeline, inversion_typ
 
     except Exception as e:
         pytest.fail(f"Failed reconstruction accuracy test: {e}")
+
+
+# ============================================================================
+# Test Cases - Visualization
+# ============================================================================
+
+@pytest.mark.image
+@pytest.mark.visualization
+@pytest.mark.parametrize("algorithm_name", PIPELINE_SUPPORTED_WATERMARKS[PIPELINE_TYPE_IMAGE])
+def test_image_watermark_visualization(algorithm_name, image_diffusion_config, tmp_path):
+    """Test visualization generation for image watermark algorithms."""
+    from visualize.auto_visualization import AutoVisualizer, VISUALIZATION_DATA_MAPPING
+    from visualize.data_for_visualization import DataForVisualization
+
+    # Skip if visualization not supported for this algorithm
+    if algorithm_name not in VISUALIZATION_DATA_MAPPING:
+        pytest.skip(f"{algorithm_name} does not have visualization support")
+
+    try:
+        # Load watermark algorithm
+        watermark = AutoWatermark.load(
+            algorithm_name,
+            algorithm_config=f'config/{algorithm_name}.json',
+            diffusion_config=image_diffusion_config
+        )
+
+        # Generate watermarked image to get visualization data
+        watermarked_image = watermark.generate_watermarked_media(TEST_PROMPT_IMAGE)
+
+        # Get visualization data from the watermark instance
+        # The watermark instance should have stored the necessary data
+        if not hasattr(watermark, 'get_visualization_data'):
+            pytest.skip(f"{algorithm_name} does not implement get_visualization_data()")
+
+        vis_data = watermark.get_visualization_data()
+
+        # Validate visualization data
+        assert vis_data is not None
+        assert isinstance(vis_data, DataForVisualization)
+        assert vis_data.algorithm_name == algorithm_name
+
+        # Load visualizer
+        visualizer = AutoVisualizer.load(
+            algorithm_name=algorithm_name,
+            data_for_visualization=vis_data
+        )
+
+        assert visualizer is not None
+
+        # Test basic visualization methods
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+
+        # Test drawing watermarked image
+        visualizer.draw_watermarked_image(ax=ax)
+        plt.close(fig)
+
+        # Test drawing original latents
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        visualizer.draw_orig_latents(channel=0, ax=ax)
+        plt.close(fig)
+
+        # Save a test visualization
+        save_path = tmp_path / f"{algorithm_name}_test_visualization.png"
+        fig = visualizer.visualize(
+            rows=1,
+            cols=2,
+            methods=['draw_watermarked_image', 'draw_orig_latents'],
+            method_kwargs=[{}, {'channel': 0}],
+            save_path=str(save_path)
+        )
+        plt.close(fig)
+
+        # Verify the file was created
+        assert save_path.exists()
+
+        print(f"✓ {algorithm_name} visualization test passed")
+        print(f"  Visualization saved to: {save_path}")
+
+    except NotImplementedError as e:
+        pytest.skip(f"{algorithm_name} visualization not fully implemented: {e}")
+    except Exception as e:
+        pytest.fail(f"Failed to test visualization for {algorithm_name}: {e}")
+
+
+@pytest.mark.video
+@pytest.mark.visualization
+@pytest.mark.slow
+@pytest.mark.parametrize("algorithm_name", PIPELINE_SUPPORTED_WATERMARKS[PIPELINE_TYPE_TEXT_TO_VIDEO])
+def test_video_watermark_visualization(algorithm_name, video_diffusion_config, tmp_path):
+    """Test visualization generation for video watermark algorithms."""
+    from visualize.auto_visualization import AutoVisualizer, VISUALIZATION_DATA_MAPPING
+    from visualize.data_for_visualization import DataForVisualization
+
+    # Skip if visualization not supported for this algorithm
+    if algorithm_name not in VISUALIZATION_DATA_MAPPING:
+        pytest.skip(f"{algorithm_name} does not have visualization support")
+
+    try:
+        # Load watermark algorithm
+        watermark = AutoWatermark.load(
+            algorithm_name,
+            algorithm_config=f'config/{algorithm_name}.json',
+            diffusion_config=video_diffusion_config
+        )
+
+        # Generate watermarked video to get visualization data
+        watermarked_frames = watermark.generate_watermarked_media(
+            TEST_PROMPT_VIDEO,
+            num_frames=NUM_FRAMES
+        )
+
+        # Get visualization data from the watermark instance
+        if not hasattr(watermark, 'get_visualization_data'):
+            pytest.skip(f"{algorithm_name} does not implement get_visualization_data()")
+
+        vis_data = watermark.get_visualization_data()
+
+        # Validate visualization data
+        assert vis_data is not None
+        assert isinstance(vis_data, DataForVisualization)
+        assert vis_data.algorithm_name == algorithm_name
+
+        # Load visualizer
+        visualizer = AutoVisualizer.load(
+            algorithm_name=algorithm_name,
+            data_for_visualization=vis_data
+        )
+
+        assert visualizer is not None
+
+        # Test basic visualization methods for video
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+
+        # Test drawing watermarked image (first frame)
+        visualizer.draw_watermarked_image(ax=ax)
+        plt.close(fig)
+
+        # Test drawing original latents with frame parameter
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        visualizer.draw_orig_latents(channel=0, frame=0, ax=ax)
+        plt.close(fig)
+
+        # Save a test visualization
+        save_path = tmp_path / f"{algorithm_name}_test_visualization.png"
+        fig = visualizer.visualize(
+            rows=1,
+            cols=2,
+            methods=['draw_watermarked_image', 'draw_orig_latents'],
+            method_kwargs=[{}, {'channel': 0, 'frame': 0}],
+            save_path=str(save_path)
+        )
+        plt.close(fig)
+
+        # Verify the file was created
+        assert save_path.exists()
+
+        print(f"✓ {algorithm_name} video visualization test passed")
+        print(f"  Visualization saved to: {save_path}")
+
+    except NotImplementedError as e:
+        pytest.skip(f"{algorithm_name} video visualization not fully implemented: {e}")
+    except Exception as e:
+        pytest.fail(f"Failed to test video visualization for {algorithm_name}: {e}")

@@ -1,25 +1,26 @@
-# MarkDiffusion 水印算法单元测试
+# MarkDiffusion Watermark Algorithm Unit Tests
 
-这个目录包含了 MarkDiffusion 项目中所有水印算法和反演模块的参数化单元测试。
+This directory contains all parameterized unit tests for the watermark algorithms and inversion modules in the MarkDiffusion project.
 
-## 📋 目录结构
+## 📋 Directory Structure
 
-```
+```text
 test/
-├── test_watermark_algorithms.py  # 主测试文件（参数化测试）
-├── conftest.py                   # Pytest 配置和 fixtures
-├── pytest.ini                    # Pytest 配置文件
-├── requirements-test.txt         # 测试依赖包
-├── run_tests.sh                  # 便捷测试脚本
-├── README.md                     # 本文档
-└── test_method.py                # 原有的测试文件（保留）
+├── test_watermark_algorithms.py  # Main test file (parameterized tests)
+├── conftest.py                   # Pytest configuration and fixtures
+├── pytest.ini                    # Pytest config file
+├── requirements-test.txt         # Test dependencies
+├── run_tests.sh                  # Convenience test script
+├── README.md                     # This document
+└── test_method.py                # Legacy test file (kept for reference)
 ```
 
-## 🎯 支持的测试对象
+## 🎯 What Is Covered by the Tests
 
-### 水印算法
+### Watermark Algorithms
 
-#### 图像水印算法（9个）
+#### Image watermark algorithms (9)
+
 - **TR** (Tree-Ring)
 - **GS** (Gaussian Shading)
 - **PRC** (Perceptual Robust Coding)
@@ -30,240 +31,332 @@ test/
 - **GM** (Generative Model / GaussMarker)
 - **SFW** (Stable Feature Watermark)
 
-#### 视频水印算法（2个）
+#### Video watermark algorithms (2)
+
 - **VideoShield**
 - **VideoMark**
 
-### 反演模块（Inversion Modules）
+### Inversion Modules
 
-- **DDIM Inversion** - 支持4D图像输入和5D视频输入
-- **Exact Inversion** - 支持4D图像输入
+- **DDIM Inversion** – supports 4D image input and 5D video input  
+- **Exact Inversion** – supports 4D image input
 
-## 🚀 快速开始
+### Visualization Modules
 
-### 1. 安装测试依赖
+- Visualization support for all image and video watermark algorithms  
+- Visualization content includes: watermarked images, original latent vectors, inverted latent vectors, frequency-domain analysis, etc.  
+- Each algorithm has its own dedicated visualizer
+
+## 🚀 Quick Start
+
+### 1. Install Test Dependencies
 
 ```bash
 pip install -r test/requirements-test.txt
 ```
 
-测试依赖包括：
+Test dependencies include:
+
 - pytest
 - pytest-timeout
-- pytest-html (可选，用于生成HTML报告)
-- pytest-cov (可选，用于覆盖率报告)
-- pytest-xdist (可选，用于并行测试)
+- pytest-html (optional, to generate HTML reports)
+- pytest-cov (optional, for coverage reports)
+- pytest-xdist (optional, for parallel testing)
 
-### 2. 运行测试
+### 2. Run Tests
 
-#### 使用 pytest 直接运行
+#### Run directly with pytest
 
 ```bash
-# 测试所有算法和模块
+# Test all algorithms and modules
 pytest test/test_watermark_algorithms.py -v
 
-# 测试特定算法
+# Test a specific algorithm
 pytest test/test_watermark_algorithms.py -v --algorithm TR
 
-# 快速测试（仅初始化）
+# Quick tests (initialization only)
 pytest test/test_watermark_algorithms.py -v -k initialization
 ```
 
-#### 使用便捷脚本
+#### Use the convenience script
 
 ```bash
-# 测试所有算法
+# Test all algorithms
 ./test/run_tests.sh
 
-# 测试图像算法
+# Test image algorithms
 ./test/run_tests.sh --type image
 
-# 测试特定算法
+# Test a specific algorithm
 ./test/run_tests.sh --algorithm TR
 
-# 快速测试（仅初始化）
+# Quick tests (initialization only)
 ./test/run_tests.sh --type quick
 ```
 
-## 📋 测试类型和覆盖范围
+## 📋 Test Types and Coverage
 
-### 水印算法测试
+### Watermark Algorithm Tests
 
-#### 1. 初始化测试（11个测试）
-验证水印算法能否正确初始化：
-- 加载配置文件
-- 创建水印实例
-- 验证管道类型
+#### 1. Initialization tests (11 tests)
+
+Verify that watermark algorithms can be initialized correctly:
+
+- Load configuration files
+- Create watermark instances
+- Validate pipeline type
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -k initialization
 ```
 
-#### 2. 生成测试（22个测试）
-验证水印算法的生成功能：
-- 生成带水印的媒体（图像/视频）
-- 生成不带水印的媒体
-- 验证输出格式和尺寸
+#### 2. Generation tests (22 tests)
+
+Verify the generation functionality of watermark algorithms:
+
+- Generate watermarked media (image/video)
+- Generate non-watermarked media
+- Validate output format and dimensions
 
 ```bash
-# 测试所有生成功能
+# Test all generation functionality
 pytest test/test_watermark_algorithms.py -v -k generation
 
-# 跳过生成测试
+# Skip generation tests
 pytest test/test_watermark_algorithms.py -v --skip-generation
 ```
 
-#### 3. 检测测试（11个测试）
-验证水印算法的检测功能：
-- 检测带水印媒体中的水印
-- 检测不带水印媒体（负样本）
-- 验证检测结果格式
+#### 3. Detection tests (11 tests)
+
+Verify the detection functionality of watermark algorithms:
+
+- Detect watermarks in watermarked media
+- Detect on non-watermarked media (negative samples)
+- Validate the result format of detection
 
 ```bash
-# 测试所有检测功能
+# Test all detection functionality
 pytest test/test_watermark_algorithms.py -v -k detection
 
-# 跳过检测测试
+# Skip detection tests
 pytest test/test_watermark_algorithms.py -v --skip-detection
 ```
 
-### 反演模块测试（Inversion Tests）
+### Inversion Tests
 
-#### 4. 4D图像反演测试（2个测试：DDIM + Exact）
-测试反演模块处理4维图像输入的能力：
-- 输入形状：`(batch_size, channels, height, width)`
-- 测试DDIM和Exact两种反演方法
-- 验证能够准确还原潜在向量Z_T
+#### 4. 4D image inversion tests (2 tests: DDIM + Exact)
+
+Test the ability of inversion modules to handle 4D image input:
+
+- Input shape: `(batch_size, channels, height, width)`
+- Test both DDIM and Exact inversion methods
+- Verify accurate recovery of latent vector Z_T
 
 ```bash
-# 测试4D图像反演
+# Test 4D image inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d"
 
-# 测试DDIM反演
+# Test DDIM inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[ddim]"
 
-# 测试Exact反演
+# Test Exact inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_4d[exact]"
 ```
 
-#### 5. 5D视频反演测试（1个测试：DDIM）
-测试反演模块处理5维视频帧输入的能力：
-- 输入形状：`(batch_size, num_frames, channels, height, width)`
-- 测试DDIM反演方法
-- 验证能够准确还原视频帧的潜在向量Z_T
+#### 5. 5D video inversion tests (1 test: DDIM)
+
+Test the ability of inversion modules to handle 5D video frame input:
+
+- Input shape: `(batch_size, num_frames, channels, height, width)`
+- Test DDIM inversion method
+- Verify accurate recovery of latent vector Z_T for video frames
 
 ```bash
-# 测试5D视频反演
+# Test 5D video inversion
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_5d"
 ```
 
-#### 6. 反演重建精度测试（1个测试）
-测试反演模块的重建精度：
-- 前向扩散：x_0 → x_T
-- 反向扩散：x_T → x_0
-- 验证重建误差在可接受范围内
+#### 6. Inversion reconstruction accuracy tests (1 test)
+
+Test the reconstruction accuracy of inversion modules:
+
+- Forward diffusion: x₀ → x_T
+- Reverse diffusion: x_T → x₀
+- Validate that reconstruction error is within an acceptable range
 
 ```bash
-# 测试重建精度
+# Test reconstruction accuracy
 pytest test/test_watermark_algorithms.py -v -k "test_inversion_reconstruction"
 ```
 
-#### 反演测试汇总
+#### Inversion test summary
 
 ```bash
-# 测试所有反演模块
+# Test all inversion modules
 pytest test/test_watermark_algorithms.py -v -m inversion
 
-# 测试反演模块（不包括耗时的视频测试）
+# Test inversion modules (excluding slow video tests)
 pytest test/test_watermark_algorithms.py -v -m "inversion and not slow"
 ```
 
-**总计**: 47+ 个参数化测试用例（44个水印算法测试 + 4个反演测试）
+### Visualization Tests
 
-## 📖 常用命令速查表
+#### 7. Image watermark visualization tests (9 tests)
 
-| 需求 | 命令 |
-|------|------|
-| 测试所有算法 | `pytest test/test_watermark_algorithms.py -v` |
-| 测试图像算法 | `pytest test/test_watermark_algorithms.py -v -m image` |
-| 测试视频算法 | `pytest test/test_watermark_algorithms.py -v -m video` |
-| 测试反演模块 | `pytest test/test_watermark_algorithms.py -v -m inversion` |
-| 测试TR算法 | `pytest test/test_watermark_algorithms.py -v -k TR` |
-| 快速测试（初始化） | `pytest test/test_watermark_algorithms.py -v -k initialization` |
-| 跳过生成测试 | `pytest test/test_watermark_algorithms.py -v --skip-generation` |
-| 并行运行 | `pytest test/test_watermark_algorithms.py -v -n auto` |
-| 生成HTML报告 | `pytest test/test_watermark_algorithms.py -v --html=report.html` |
-| 测试4D图像反演 | `pytest test/test_watermark_algorithms.py -v -k test_inversion_4d` |
-| 测试5D视频反演 | `pytest test/test_watermark_algorithms.py -v -k test_inversion_5d` |
+Test visualization for image watermark algorithms:
 
-## ⚙️ 命令行参数
+- Load visualization data
+- Create visualizer instances
+- Test basic plotting methods (watermarked images, latent vectors, etc.)
+- Generate and save visualization images
 
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `--algorithm` | 指定要测试的算法名称 | None (测试所有) |
-| `--image-model-path` | 图像生成模型路径 | `stabilityai/stable-diffusion-2-1-base` |
-| `--video-model-path` | 视频生成模型路径 | `damo-vilab/text-to-video-ms-1.7b` |
-| `--skip-generation` | 跳过生成测试 | False |
-| `--skip-detection` | 跳过检测测试 | False |
-
-## 🏷️ 测试标记 (Markers)
-
-| 标记 | 说明 | 使用方法 |
-|------|------|---------|
-| `@pytest.mark.image` | 图像水印测试 | `-m image` |
-| `@pytest.mark.video` | 视频水印测试 | `-m video` |
-| `@pytest.mark.inversion` | 反演模块测试 | `-m inversion` |
-| `@pytest.mark.slow` | 耗时测试（生成和检测） | `-m "not slow"` |
-
-使用标记过滤测试：
 ```bash
-# 只运行图像测试
-pytest test/test_watermark_algorithms.py -v -m image
+# Test visualization of all image algorithms
+pytest test/test_watermark_algorithms.py -v -k "test_image_watermark_visualization"
 
-# 只运行视频测试
-pytest test/test_watermark_algorithms.py -v -m video
-
-# 只运行反演测试
-pytest test/test_watermark_algorithms.py -v -m inversion
-
-# 排除耗时测试
-pytest test/test_watermark_algorithms.py -v -m "not slow"
-
-# 组合标记：测试图像算法的初始化
-pytest test/test_watermark_algorithms.py -v -m image -k initialization
+# Test visualization for a specific algorithm
+pytest test/test_watermark_algorithms.py -v -k "test_image_watermark_visualization[TR]"
 ```
 
-## 💡 实用示例
+#### 8. Video watermark visualization tests (2 tests)
 
-### 示例 1: 快速验证所有算法能否初始化
+Test visualization for video watermark algorithms:
+
+- Load video visualization data
+- Create visualizer instances
+- Test visualization of video frames
+- Generate and save visualization images
+
+```bash
+# Test visualization of all video algorithms
+pytest test/test_watermark_algorithms.py -v -k "test_video_watermark_visualization"
+
+# Test visualization for a specific video algorithm
+pytest test/test_watermark_algorithms.py -v -k "test_video_watermark_visualization[VideoShield]"
+```
+
+#### Visualization test summary
+
+```bash
+# Test all visualization functionality
+pytest test/test_watermark_algorithms.py -v -m visualization
+
+# Test image visualization only (exclude video)
+pytest test/test_watermark_algorithms.py -v -m "visualization and image"
+
+# Test video visualization
+pytest test/test_watermark_algorithms.py -v -m "visualization and video"
+```
+
+**Total**: 58+ parameterized test cases (44 watermark algorithm tests + 4 inversion tests + 11 visualization tests)
+
+## 📖 Quick Command Reference
+
+| Purpose | Command |
+|--------|---------|
+| Test all algorithms | `pytest test/test_watermark_algorithms.py -v` |
+| Test image algorithms | `pytest test/test_watermark_algorithms.py -v -m image` |
+| Test video algorithms | `pytest test/test_watermark_algorithms.py -v -m video` |
+| Test inversion modules | `pytest test/test_watermark_algorithms.py -v -m inversion` |
+| Test visualization functionality | `pytest test/test_watermark_algorithms.py -v -m visualization` |
+| Test TR algorithm | `pytest test/test_watermark_algorithms.py -v -k TR` |
+| Quick test (initialization) | `pytest test/test_watermark_algorithms.py -v -k initialization` |
+| Skip generation tests | `pytest test/test_watermark_algorithms.py -v --skip-generation` |
+| Run in parallel | `pytest test/test_watermark_algorithms.py -v -n auto` |
+| Generate HTML report | `pytest test/test_watermark_algorithms.py -v --html=report.html` |
+| Test 4D image inversion | `pytest test/test_watermark_algorithms.py -v -k test_inversion_4d` |
+| Test 5D video inversion | `pytest test/test_watermark_algorithms.py -v -k test_inversion_5d` |
+| Test image visualization | `pytest test/test_watermark_algorithms.py -v -k test_image_watermark_visualization` |
+| Test video visualization | `pytest test/test_watermark_algorithms.py -v -k test_video_watermark_visualization` |
+
+## ⚙️ Command-line Arguments
+
+| Argument | Description | Default |
+|---------|-------------|---------|
+| `--algorithm` | Name of algorithm to test | None (test all) |
+| `--image-model-path` | Image generation model path | `stabilityai/stable-diffusion-2-1-base` |
+| `--video-model-path` | Video generation model path | `damo-vilab/text-to-video-ms-1.7b` |
+| `--skip-generation` | Skip generation tests | False |
+| `--skip-detection` | Skip detection tests | False |
+
+## 🏷️ Test Markers
+
+| Marker | Description | How to use |
+|--------|-------------|------------|
+| `@pytest.mark.image` | Image watermark tests | `-m image` |
+| `@pytest.mark.video` | Video watermark tests | `-m video` |
+| `@pytest.mark.inversion` | Inversion module tests | `-m inversion` |
+| `@pytest.mark.visualization` | Visualization tests | `-m visualization` |
+| `@pytest.mark.slow` | Slow tests (generation and detection) | `-m "not slow"` |
+
+Use markers to filter tests:
+
+```bash
+# Run only image tests
+pytest test/test_watermark_algorithms.py -v -m image
+
+# Run only video tests
+pytest test/test_watermark_algorithms.py -v -m video
+
+# Run only inversion tests
+pytest test/test_watermark_algorithms.py -v -m inversion
+
+# Run only visualization tests
+pytest test/test_watermark_algorithms.py -v -m visualization
+
+# Exclude slow tests
+pytest test/test_watermark_algorithms.py -v -m "not slow"
+
+# Combined markers: initialization tests for image algorithms
+pytest test/test_watermark_algorithms.py -v -m image -k initialization
+
+# Combined markers: visualization tests for image algorithms
+pytest test/test_watermark_algorithms.py -v -m "image and visualization"
+```
+
+## 💡 Practical Examples
+
+### Example 1: Quickly verify all algorithms can initialize
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -k "initialization"
 ```
-**预期结果**: 11个算法测试通过，耗时10-30秒
 
-### 示例 2: 完整测试单个算法
+**Expected result**: 11 algorithm tests pass, taking about 10–30 seconds.
+
+### Example 2: Fully test a single algorithm
 
 ```bash
 pytest test/test_watermark_algorithms.py -v --algorithm TR
 ```
-**预期结果**: 3个测试通过（初始化、生成、检测）
 
-### 示例 3: 测试所有图像算法的生成功能
+**Expected result**: 3 tests pass (initialization, generation, detection).
+
+### Example 3: Test generation functionality of all image algorithms
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -m image -k "generation"
 ```
-**预期结果**: 18个测试（9个算法 × 2种生成）
 
-### 示例 4: 测试所有反演模块
+**Expected result**: 18 tests (9 algorithms × 2 generation types).
+
+### Example 4: Test all inversion modules
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -m inversion
 ```
-**预期结果**: 4个测试通过（2个4D测试 + 1个5D测试 + 1个重建测试）
 
-### 示例 5: 在 CI/CD 中运行（跳过耗时测试）
+**Expected result**: 4 tests pass (2×4D tests + 1×5D test + 1 reconstruction test).
+
+### Example 4.5: Test all visualization functionality
+
+```bash
+pytest test/test_watermark_algorithms.py -v -m visualization
+```
+
+**Expected result**: 11 tests pass (9 image visualizations + 2 video visualizations).
+
+### Example 5: Run in CI/CD (skip slow tests)
 
 ```bash
 pytest test/test_watermark_algorithms.py -v \
@@ -272,7 +365,7 @@ pytest test/test_watermark_algorithms.py -v \
     --maxfail=3
 ```
 
-### 示例 6: 生成完整测试报告
+### Example 6: Generate a full test report
 
 ```bash
 pytest test/test_watermark_algorithms.py -v \
@@ -281,11 +374,13 @@ pytest test/test_watermark_algorithms.py -v \
     --cov=inversions \
     --cov-report=html
 ```
-**输出**:
-- `report.html` - 测试报告
-- `htmlcov/` - 覆盖率报告
 
-### 示例 7: 调试特定算法的失败
+**Output**:
+
+- `report.html` – test report
+- `htmlcov/` – coverage report
+
+### Example 7: Debug failures of a specific algorithm
 
 ```bash
 pytest test/test_watermark_algorithms.py -v \
@@ -295,173 +390,241 @@ pytest test/test_watermark_algorithms.py -v \
     --pdb
 ```
 
-### 示例 8: 并行测试以提高速度
+### Example 8: Parallel testing for speed
 
 ```bash
-# 安装 pytest-xdist
+# Install pytest-xdist
 pip install pytest-xdist
 
-# 并行运行测试
+# Run tests in parallel
 pytest test/test_watermark_algorithms.py -v -n auto
 ```
 
-## 📊 测试报告
-
-### 查看详细输出
+### Example 9: Test visualization of a specific algorithm
 
 ```bash
-# 显示详细的测试输出（包括print语句）
+# Test visualization for TR algorithm
+pytest test/test_watermark_algorithms.py -v -k "test_image_watermark_visualization[TR]"
+```
+
+**Expected result**: 1 test passes, visualization image generated in a temporary directory.
+
+### Example 10: Test visualization for all image algorithms (skip video)
+
+```bash
+pytest test/test_watermark_algorithms.py -v -m "visualization and image"
+```
+
+**Expected result**: 9 image visualization tests pass.
+
+## 📊 Test Reports
+
+### View detailed output
+
+```bash
+# Show detailed test output (including print statements)
 pytest test/test_watermark_algorithms.py -v -s
 
-# 显示测试覆盖率
+# Show test coverage
 pytest test/test_watermark_algorithms.py -v --cov=watermark --cov=inversions
 ```
 
-### 生成 HTML 报告
+### Generate HTML report
 
 ```bash
-# 安装 pytest-html
+# Install pytest-html
 pip install pytest-html
 
-# 生成 HTML 报告
+# Generate HTML report
 pytest test/test_watermark_algorithms.py -v --html=report.html --self-contained-html
 ```
 
-## 🔧 故障排除
+## 🔧 Troubleshooting
 
-### 问题 1: 模型加载失败
+### Issue 1: Model failed to load
 
-**错误信息**: `Failed to load image/video model`
+**Error message**: `Failed to load image/video model`
 
-**解决方案**:
-1. 检查模型路径是否正确
-2. 确保有足够的磁盘空间和内存
-3. 使用 `--image-model-path` 或 `--video-model-path` 指定本地模型路径
+**Solutions**:
+
+1. Check that the model path is correct.
+2. Ensure there is enough disk space and memory.
+3. Use `--image-model-path` or `--video-model-path` to specify a local model path:
 
 ```bash
 pytest test/test_watermark_algorithms.py -v \
     --image-model-path /local/path/to/model
 ```
 
-### 问题 2: CUDA 内存不足
+### Issue 2: CUDA out of memory
 
-**错误信息**: `CUDA out of memory`
+**Error message**: `CUDA out of memory`
 
-**解决方案**:
-1. 减少批处理大小
-2. 使用 CPU 运行测试（会自动检测）
-3. 一次只测试一个算法：
+**Solutions**:
+
+1. Reduce batch size.
+2. Run tests on CPU (auto-detected).
+3. Test a single algorithm at a time:
 
 ```bash
 pytest test/test_watermark_algorithms.py -v --algorithm TR
 ```
 
-### 问题 3: 测试超时
+### Issue 3: Test timeout
 
-**错误信息**: `Test timeout`
+**Error message**: `Test timeout`
 
-**解决方案**:
-1. 增加超时时间：在 `pytest.ini` 中修改 `timeout` 值
-2. 跳过耗时测试：
+**Solutions**:
+
+1. Increase timeout by changing the `timeout` value in `pytest.ini`.
+2. Skip slow tests:
 
 ```bash
 pytest test/test_watermark_algorithms.py -v --skip-generation --skip-detection
 ```
 
-3. 只运行初始化测试：
+3. Run only initialization tests:
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -k "initialization"
 ```
 
-### 问题 4: 配置文件未找到
+### Issue 4: Config file not found
 
-**错误信息**: `Config file not found`
+**Error message**: `Config file not found`
 
-**解决方案**:
-1. 确保从项目根目录运行测试
-2. 检查 `config/` 目录中是否存在对应的 JSON 配置文件
-3. 验证配置文件名称大小写是否正确
+**Solutions**:
 
-### 问题 5: 反演测试失败
+1. Make sure tests are run from the project root.
+2. Check that the corresponding JSON config file exists under the `config/` directory.
+3. Verify the exact filename and its case.
 
-**错误信息**: `Failed to invert 4D/5D input`
+### Issue 5: Inversion tests failed
 
-**解决方案**:
-1. 检查设备是否有足够的GPU内存
-2. 验证scheduler和unet模型是否正确加载
-3. 查看详细错误输出：
+**Error message**: `Failed to invert 4D/5D input`
+
+**Solutions**:
+
+1. Check that the device has enough GPU memory.
+2. Verify that scheduler and UNet models are loaded correctly.
+3. Inspect detailed error output:
 
 ```bash
 pytest test/test_watermark_algorithms.py -v -s -k inversion
 ```
 
-## 📈 性能优化
+### Issue 6: Visualization tests failed
 
-### 测试速度
+**Error message**: `Algorithm does not implement get_visualization_data()`
 
-- **快速测试**（仅初始化）: ~10-30 秒
-- **完整测试**（包含生成和检测）: ~10-30 分钟（取决于硬件）
-- **反演测试**: ~1-3 分钟（4D）、~5-10 分钟（5D）
+**Solutions**:
 
-### 优化建议
+1. Ensure the watermark algorithm implements `get_visualization_data()`.
+2. Check that the algorithm is registered in `VISUALIZATION_DATA_MAPPING`.
+3. Inspect detailed error output:
 
-1. **使用 `-k initialization` 进行快速验证**
+```bash
+pytest test/test_watermark_algorithms.py -v -s -k visualization
+```
+
+### Issue 7: matplotlib-related errors
+
+**Error message**: `No module named 'matplotlib'`
+
+**Solutions**:
+
+1. Install matplotlib:
+
+```bash
+pip install matplotlib
+```
+
+2. If running in a headless environment (e.g., server), set a backend:
+
+```bash
+export MPLBACKEND=Agg
+pytest test/test_watermark_algorithms.py -v -m visualization
+```
+
+## 📈 Performance Optimization
+
+### Test durations
+
+- **Quick tests** (initialization only): ~10–30 seconds  
+- **Full tests** (including generation and detection): ~10–30 minutes (depending on hardware)  
+- **Inversion tests**: ~1–3 minutes (4D), ~5–10 minutes (5D)  
+- **Visualization tests**: ~5–15 minutes (requires generating watermarked images first)
+
+### Optimization tips
+
+1. **Use `-k initialization` for quick verification**
+
    ```bash
    pytest test/test_watermark_algorithms.py -v -k initialization
    ```
 
-2. **使用 `--skip-generation` 跳过耗时的生成测试**
+2. **Use `--skip-generation` to skip expensive generation tests**
+
    ```bash
    pytest test/test_watermark_algorithms.py -v --skip-generation
    ```
 
-3. **使用 `-n auto` 并行运行测试**
+3. **Use `-n auto` for parallel execution**
+
    ```bash
    pip install pytest-xdist
    pytest test/test_watermark_algorithms.py -v -n auto
    ```
 
-4. **使用 `--algorithm` 只测试单个算法**
+4. **Use `--algorithm` to test a single algorithm**
+
    ```bash
    pytest test/test_watermark_algorithms.py -v --algorithm TR
    ```
 
-5. **使用 session 级 fixtures 缓存模型**
-   - 模型只加载一次，在所有测试间共享
-   - 由 `conftest.py` 自动处理
+5. **Use session-scoped fixtures to cache models**
 
-6. **使用 GPU 加速**
-   - 测试会自动检测并使用可用的 CUDA 设备
-   - 大幅提升测试速度
+   - Models are loaded only once and shared across tests.
+   - Handled automatically in `conftest.py`.
 
-## 📝 添加新的测试
+6. **Use GPU acceleration**
 
-### 为新的水印算法添加测试
+   - Tests automatically detect and use available CUDA devices.
+   - Significantly speeds up testing.
 
-如果你想为新的水印算法添加测试，只需：
+7. **Skip visualization tests to save time**
 
-1. 在 `watermark/auto_watermark.py` 中注册新算法
-2. 在 `config/` 目录中添加配置文件
-3. 测试框架会自动发现并测试新算法
+   ```bash
+   pytest test/test_watermark_algorithms.py -v -m "not visualization"
+   ```
 
-**不需要修改任何测试代码！**
+## 📝 Adding New Tests
 
-### 为反演模块添加新测试
+### Add tests for a new watermark algorithm
 
-在 `test_watermark_algorithms.py` 中添加新的测试函数：
+To add tests for a new watermark algorithm:
+
+1. Register the new algorithm in `watermark/auto_watermark.py`.
+2. Add its config file under the `config/` directory.
+3. The test framework will automatically discover and test the new algorithm.
+
+**No test code changes required!**
+
+### Add new tests for inversion modules
+
+Add a new test function in `test_watermark_algorithms.py`:
 
 ```python
 @pytest.mark.inversion
 @pytest.mark.parametrize("inversion_type", ["ddim", "exact"])
 def test_new_inversion_feature(inversion_type, device, image_pipeline):
-    # 测试代码
+    # Test code
     pass
 ```
 
-### 修改测试参数
+### Modify test parameters
 
-编辑 `conftest.py` 中的常量：
+Edit constants in `conftest.py`:
 
 ```python
 IMAGE_SIZE = (512, 512)
@@ -470,108 +633,129 @@ GUIDANCE_SCALE = 7.5
 NUM_FRAMES = 16
 ```
 
-或通过命令行参数覆盖默认值。
+Or override the default values via command-line arguments.
 
-## ✨ 核心特性
+## ✨ Key Features
 
-1. ✅ **零冗余设计** - 一个测试文件覆盖所有 11 个算法 + 反演模块
-2. ✅ **参数化测试** - 自动为每个算法生成测试用例
-3. ✅ **灵活过滤** - 支持按算法、类型、功能过滤
-4. ✅ **命令行参数** - 支持自定义模型路径、跳过测试等
-5. ✅ **Session 级 Fixtures** - 模型只加载一次，提高效率
-6. ✅ **详细文档** - 包含完整的使用说明和示例
-7. ✅ **便捷脚本** - 提供友好的命令行工具
-8. ✅ **CI/CD 就绪** - 包含 GitHub Actions 配置示例
-9. ✅ **可扩展** - 新增算法无需修改测试代码
-10. ✅ **错误处理** - 优雅处理未实现的功能
-11. ✅ **反演测试** - 完整的4D/5D输入测试和重建验证
+1. ✅ **Zero redundancy** – one test file covers all 11 algorithms + inversion modules + visualization modules  
+2. ✅ **Parameterized tests** – test cases are automatically generated per algorithm  
+3. ✅ **Flexible filtering** – filter by algorithm, type, or functionality  
+4. ✅ **Command-line options** – customize model paths, skip tests, etc.  
+5. ✅ **Session-scoped fixtures** – models loaded once for all tests, improving efficiency  
+6. ✅ **Comprehensive docs** – full usage instructions and examples  
+7. ✅ **Convenience scripts** – friendly CLI tooling  
+8. ✅ **CI/CD ready** – includes example GitHub Actions configuration  
+9. ✅ **Extensible** – add new algorithms without modifying test code  
+10. ✅ **Graceful error handling** – handles unimplemented functionality cleanly  
+11. ✅ **Inversion tests** – complete 4D/5D input tests and reconstruction validation  
+12. ✅ **Visualization tests** – automated testing of visualization for all algorithms  
 
-## 🎯 测试覆盖总结
+## 🎯 Test Coverage Summary
 
-### 算法测试矩阵
+### Algorithm Test Matrix
 
-| 测试类型 | 图像算法 | 视频算法 | 反演模块 | 总计 |
-|---------|---------|---------|---------|------|
-| 初始化测试 | 9 | 2 | - | 11 |
-| 生成测试（带水印） | 9 | 2 | - | 11 |
-| 生成测试（不带水印） | 9 | 2 | - | 11 |
-| 检测测试 | 9 | 2 | - | 11 |
-| 4D反演测试 | - | - | 2 | 2 |
-| 5D反演测试 | - | - | 1 | 1 |
-| 重建精度测试 | - | - | 1 | 1 |
-| **总计** | **36** | **8** | **4** | **48** |
+| Test type | Image algos | Video algos | Inversion | Visualization | Total |
+|-----------|-------------|-------------|-----------|---------------|-------|
+| Initialization | 9 | 2 | - | - | 11 |
+| Generation (with watermark) | 9 | 2 | - | - | 11 |
+| Generation (without watermark) | 9 | 2 | - | - | 11 |
+| Detection | 9 | 2 | - | - | 11 |
+| 4D inversion tests | - | - | 2 | - | 2 |
+| 5D inversion tests | - | - | 1 | - | 1 |
+| Reconstruction accuracy tests | - | - | 1 | - | 1 |
+| Visualization tests | 9 | 2 | - | - | 11 |
+| **Total** | **45** | **10** | **4** | **11** | **59** |
 
-### 反演测试详情
+### Inversion Test Details
 
-| 测试名称 | 输入维度 | 反演方法 | 测试内容 |
-|---------|---------|---------|---------|
-| test_inversion_4d_image_input[ddim] | 4D (B,C,H,W) | DDIM | 图像潜在向量反演 |
-| test_inversion_4d_image_input[exact] | 4D (B,C,H,W) | Exact | 图像潜在向量反演 |
-| test_inversion_5d_video_input[ddim] | 5D (B,F,C,H,W) | DDIM | 视频帧潜在向量反演 |
-| test_inversion_reconstruction_accuracy | 4D (B,C,H,W) | DDIM | 前向+反向重建精度 |
+| Test name | Input dimension | Inversion method | What is tested |
+|-----------|-----------------|------------------|----------------|
+| `test_inversion_4d_image_input[ddim]` | 4D (B,C,H,W) | DDIM | Image latent inversion |
+| `test_inversion_4d_image_input[exact]` | 4D (B,C,H,W) | Exact | Image latent inversion |
+| `test_inversion_5d_video_input[ddim]` | 5D (B,F,C,H,W) | DDIM | Video frame latent inversion |
+| `test_inversion_reconstruction_accuracy` | 4D (B,C,H,W) | DDIM | Forward + reverse reconstruction accuracy |
 
-**符号说明**:
-- B: batch_size
-- C: channels (潜在空间通道数，通常为4)
-- H: height (潜在空间高度)
-- W: width (潜在空间宽度)
-- F: num_frames (视频帧数)
+**Notation**:
 
-## 🤝 贡献指南
+- B: batch_size  
+- C: channels (latent-space channels, usually 4)  
+- H: height (latent-space height)  
+- W: width (latent-space width)  
+- F: num_frames (number of video frames)
 
-### 贡献测试改进
+### Visualization Test Details
 
-如果你发现测试中的问题或想要改进测试框架，请：
+| Test name | Algorithm type | What is tested |
+|-----------|----------------|----------------|
+| `test_image_watermark_visualization[TR]` | Image | TR visualization (watermarked image, latent vectors, frequency analysis) |
+| `test_image_watermark_visualization[GS]` | Image | GS visualization (watermark bits, reconstructed bits) |
+| `test_image_watermark_visualization[PRC]` | Image | PRC visualization |
+| `test_image_watermark_visualization[RI]` | Image | RI visualization |
+| `test_image_watermark_visualization[SEAL]` | Image | SEAL visualization |
+| `test_image_watermark_visualization[ROBIN]` | Image | ROBIN visualization |
+| `test_image_watermark_visualization[WIND]` | Image | WIND visualization |
+| `test_image_watermark_visualization[GM]` | Image | GM visualization |
+| `test_image_watermark_visualization[SFW]` | Image | SFW visualization |
+| `test_video_watermark_visualization[VideoShield]` | Video | VideoShield visualization (video frames) |
+| `test_video_watermark_visualization[VideoMark]` | Video | VideoMark visualization (video frames) |
 
-1. 创建 Issue 描述问题或改进建议
-2. Fork 项目并创建分支
-3. 提交 Pull Request 并附上测试结果
-4. 确保所有现有测试仍然通过
+## 🤝 Contributing
 
-### 添加新功能测试
+### Contribute test improvements
 
-1. 在 `test_watermark_algorithms.py` 中添加新的测试函数
-2. 使用 `@pytest.mark.parametrize` 装饰器
-3. 使用 `conftest.py` 中的 fixtures
-4. 添加适当的测试标记
-5. 更新本文档
+If you find issues in the tests or want to improve the test framework:
 
-## 🎓 学习资源
+1. Open an issue describing the problem or suggestion.  
+2. Fork the project and create a new branch.  
+3. Submit a pull request with test results.  
+4. Make sure all existing tests still pass.
 
-### pytest 相关
-- [pytest 官方文档](https://docs.pytest.org/)
-- [pytest fixtures 文档](https://docs.pytest.org/en/stable/fixture.html)
-- [pytest parametrize 文档](https://docs.pytest.org/en/stable/parametrize.html)
-- [pytest 标记文档](https://docs.pytest.org/en/stable/mark.html)
+### Add tests for new features
 
-### 项目相关
-- MarkDiffusion 项目文档
-- `watermark/` 目录下的各个算法实现
-- `inversions/` 目录下的反演模块实现
-- `config/` 目录下的配置文件
+1. Add new test functions in `test_watermark_algorithms.py`.  
+2. Use `@pytest.mark.parametrize` decorators.  
+3. Use fixtures from `conftest.py`.  
+4. Add appropriate test markers.  
+5. Update this document.
 
-## 💻 CI/CD 集成
+## 🎓 Learning Resources
 
-### GitHub Actions 示例
+### pytest
 
-参考 `.github_workflows_example.yml` 文件，包含：
+- [Official pytest docs](https://docs.pytest.org/)  
+- [pytest fixtures docs](https://docs.pytest.org/en/stable/fixture.html)  
+- [pytest parametrize docs](https://docs.pytest.org/en/stable/parametrize.html)  
+- [pytest marks docs](https://docs.pytest.org/en/stable/mark.html)
 
-1. **快速测试**: 只测试初始化（适合每次提交）
-2. **完整测试**: 包含生成和检测（适合PR和发布）
-3. **矩阵测试**: 并行测试多个算法
+### Project
 
-### 本地CI测试
+- MarkDiffusion project documentation  
+- Implementations under the `watermark/` directory  
+- Inversion modules under the `inversions/` directory  
+- Config files under the `config/` directory  
 
-模拟CI环境运行测试：
+## 💻 CI/CD Integration
+
+### GitHub Actions Example
+
+See the `.github_workflows_example.yml` file, which includes:
+
+1. **Quick tests**: initialization only (good for each commit)  
+2. **Full tests**: includes generation and detection (good for PRs and releases)  
+3. **Matrix tests**: parallel testing across multiple algorithms  
+
+### Local CI-style Testing
+
+Simulate CI environment locally:
 
 ```bash
-# 快速CI测试
+# Quick CI-style tests
 pytest test/test_watermark_algorithms.py -v \
     -k initialization \
     --tb=short \
     --maxfail=3
 
-# 完整CI测试
+# Full CI tests
 pytest test/test_watermark_algorithms.py -v \
     --html=report.html \
     --cov=watermark \
@@ -579,16 +763,6 @@ pytest test/test_watermark_algorithms.py -v \
     --cov-report=html
 ```
 
-## 📄 许可证
+## 📄 License
 
-本测试代码遵循 MarkDiffusion 项目的 Apache 2.0 许可证。
-
----
-
-**创建日期**: 2025-11-19
-**最后更新**: 2025-11-20
-**版本**: 2.0.0
-**状态**: ✅ 已完成（包含反演测试）
-**维护者**: MarkDiffusion Team
-
-🎉 **测试框架已就绪，包含完整的水印算法和反演模块测试！**
+These test codes follow the MarkDiffusion project’s Apache 2.0 license.
